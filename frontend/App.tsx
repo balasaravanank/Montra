@@ -10,7 +10,23 @@ import { Settings } from './pages/Settings';
 import { Auth } from './pages/Auth';
 import { TransactionModal } from './components/TransactionModal';
 import { GlassCard } from './components/ui/Glass';
-import { Plus, LogOut, HardDrive } from 'lucide-react';
+import { Plus, LogOut, Cloud, Loader2 } from 'lucide-react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import {
+  subscribeToTransactions,
+  subscribeToSettings,
+  subscribeToBudgets,
+  subscribeToGoals,
+  saveTransaction,
+  deleteTransaction as deleteTransactionFromDb,
+  saveBudget as saveBudgetToDb,
+  deleteBudget as deleteBudgetFromDb,
+  saveGoal as saveGoalToDb,
+  updateGoal as updateGoalInDb,
+  deleteGoal as deleteGoalFromDb,
+  saveUserSettings,
+  deleteAllUserData
+} from './services/firestoreService';
 
 const DEFAULT_SETTINGS: UserSettings = {
   currency: '$',
@@ -23,200 +39,180 @@ const DEFAULT_SETTINGS: UserSettings = {
   }
 };
 
-const SEED_TRANSACTIONS: Transaction[] = [
-  { id: 'seed-1', amount: 12.50, description: 'Campus Coffee Roasters', category: Category.FOOD, date: new Date().toISOString(), type: 'expense' },
-  { id: 'seed-2', amount: 45.00, description: 'Textbook Rental', category: Category.ACADEMICS, date: new Date(Date.now() - 86400000).toISOString(), type: 'expense' },
-  { id: 'seed-3', amount: 1500.00, description: 'Semester Grant', category: Category.SCHOLARSHIP, date: new Date(Date.now() - 172800000).toISOString(), type: 'income', source: 'Financial Aid' },
-  { id: 'seed-4', amount: 120.00, description: 'Grocery Run', category: Category.GROCERIES, date: new Date(Date.now() - 259200000).toISOString(), type: 'expense' },
-  { id: 'seed-5', amount: 15.99, description: 'Spotify Premium', category: Category.SUBSCRIPTIONS, date: new Date(Date.now() - 345600000).toISOString(), type: 'expense' },
-];
+// Main App content component (uses auth context)
+const AppContent = () => {
+  const { user, loading: authLoading, signOut } = useAuth();
 
-const App = () => {
-  // Initialize Auth State directly from storage to prevent flash of login screen
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('montra_auth') === 'true' || sessionStorage.getItem('montra_auth') === 'true';
-    }
-    return false;
-  });
-
-  const [currentView, setCurrentView] = useState<View>(() => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('montra_auth') === 'true' || sessionStorage.getItem('montra_auth') === 'true';
-      return auth ? 'dashboard' : 'login';
-    }
-    return 'login';
-  });
-
+  const [currentView, setCurrentView] = useState<View>('login');
   const [isModalOpen, setModalOpen] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
 
-  // State initialization with error handling
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('montra_transactions');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.error("Failed to parse transactions", e);
-      return [];
-    }
-  });
+  // State for data
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
-  const [budgets, setBudgets] = useState<Budget[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('montra_budgets');
-      if (saved) return JSON.parse(saved);
-      return [
-        { category: Category.UTILITIES, limit: 150 },
-        { category: Category.SHOPPING, limit: 200 },
-        { category: Category.GROCERIES, limit: 250 },
-        { category: Category.TRANSPORTATION, limit: 80 },
-        { category: Category.PERSONAL_CARE, limit: 50 }
-      ];
-    } catch (e) {
-      return [];
-    }
-  });
-
-  const [goals, setGoals] = useState<SavingsGoal[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('montra_goals');
-      if (saved) return JSON.parse(saved);
-      return [
-        { id: '1', name: "Spring Break '25", targetAmount: 1200, currentAmount: 450, icon: 'travel' },
-        { id: '2', name: 'New MacBook Pro', targetAmount: 2000, currentAmount: 800, icon: 'tech' }
-      ];
-    } catch (e) {
-      return [];
-    }
-  });
-
-  const [settings, setSettings] = useState<UserSettings>(() => {
-    if (typeof window === 'undefined') return DEFAULT_SETTINGS;
-    try {
-      const saved = localStorage.getItem('montra_settings');
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
-    } catch (e) {
-      return DEFAULT_SETTINGS;
-    }
-  });
-
-  // Persist State Effects
+  // Subscribe to Firestore data when user is authenticated
   useEffect(() => {
-    localStorage.setItem('montra_transactions', JSON.stringify(transactions));
-  }, [transactions]);
+    if (!user) {
+      setCurrentView('login');
+      setDataLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    localStorage.setItem('montra_budgets', JSON.stringify(budgets));
-  }, [budgets]);
+    setCurrentView('dashboard');
+    setDataLoading(true);
 
-  useEffect(() => {
-    localStorage.setItem('montra_goals', JSON.stringify(goals));
-  }, [goals]);
+    // Subscribe to real-time updates
+    const unsubTransactions = subscribeToTransactions(user.uid, (data) => {
+      setTransactions(data);
+    });
 
+    const unsubSettings = subscribeToSettings(user.uid, (data) => {
+      if (data) {
+        setSettings(data);
+      } else {
+        // Save default settings with user name
+        const newSettings = {
+          ...DEFAULT_SETTINGS,
+          profile: { ...DEFAULT_SETTINGS.profile, name: user.displayName || '' }
+        };
+        saveUserSettings(user.uid, newSettings);
+        setSettings(newSettings);
+      }
+    });
+
+    const unsubBudgets = subscribeToBudgets(user.uid, (data) => {
+      setBudgets(data);
+    });
+
+    const unsubGoals = subscribeToGoals(user.uid, (data) => {
+      setGoals(data);
+    });
+
+    setDataLoading(false);
+
+    // Cleanup subscriptions
+    return () => {
+      unsubTransactions();
+      unsubSettings();
+      unsubBudgets();
+      unsubGoals();
+    };
+  }, [user]);
+
+  // Apply theme
   useEffect(() => {
-    localStorage.setItem('montra_settings', JSON.stringify(settings));
-    // Apply theme
     if (settings.isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [settings]);
+  }, [settings.isDarkMode]);
 
-  const handleLogin = (name: string, rememberMe: boolean) => {
-    // update settings immediately
-    const newSettings = {
-      ...settings,
-      profile: { ...settings.profile, name }
-    };
-    setSettings(newSettings);
-    localStorage.setItem('montra_settings', JSON.stringify(newSettings));
-
-    // Check if we need to seed data for a "fresh" feel
-    if (transactions.length === 0) {
-      setTransactions(SEED_TRANSACTIONS);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setCurrentView('login');
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
-
-    if (rememberMe) {
-      localStorage.setItem('montra_auth', 'true');
-    } else {
-      sessionStorage.setItem('montra_auth', 'true');
-    }
-
-    setIsAuthenticated(true);
-    setCurrentView('dashboard');
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('montra_auth');
-    sessionStorage.removeItem('montra_auth');
-    setCurrentView('login');
-  };
-
-  const addTransaction = (t: Omit<Transaction, 'id'>) => {
+  const addTransaction = async (t: Omit<Transaction, 'id'>) => {
+    if (!user) return;
     const newTransaction = { ...t, id: crypto.randomUUID() };
-    setTransactions([newTransaction, ...transactions]);
+    await saveTransaction(user.uid, newTransaction);
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(transactions.filter(t => t.id !== id));
+  const handleDeleteTransaction = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteTransactionFromDb(user.uid, id);
+    } catch (error) {
+      console.error('Failed to delete transaction:', error);
+      alert('Failed to delete transaction. Please try again.');
+    }
   };
 
-  const saveBudget = (budget: Budget) => {
-    setBudgets(prev => {
-      const existing = prev.findIndex(b => b.category === budget.category);
-      if (existing > -1) {
-        const updated = [...prev];
-        updated[existing] = budget;
-        return updated;
-      }
-      return [...prev, budget];
-    });
+  const handleSaveBudget = async (budget: Budget) => {
+    if (!user) return;
+    await saveBudgetToDb(user.uid, budget);
   };
 
-  const deleteBudget = (category: Category) => {
-    setBudgets(prev => prev.filter(b => b.category !== category));
+  const handleDeleteBudget = async (category: Category) => {
+    if (!user) return;
+    try {
+      await deleteBudgetFromDb(user.uid, category.toString());
+    } catch (error) {
+      console.error('Failed to delete budget:', error);
+      alert('Failed to delete budget. Please try again.');
+    }
   };
 
-  const addGoal = (g: Omit<SavingsGoal, 'id'>) => {
+  const addGoal = async (g: Omit<SavingsGoal, 'id'>) => {
+    if (!user) return;
     const newGoal = { ...g, id: crypto.randomUUID() };
-    setGoals([...goals, newGoal]);
+    await saveGoalToDb(user.uid, newGoal);
   };
 
-  const updateGoalAmount = (id: string, amount: number) => {
-    setGoals(prev => prev.map(g =>
-      g.id === id ? { ...g, currentAmount: g.currentAmount + amount } : g
-    ));
+  const updateGoalAmount = async (id: string, amount: number) => {
+    if (!user) return;
+    const goal = goals.find(g => g.id === id);
+    if (goal) {
+      await updateGoalInDb(user.uid, id, { currentAmount: goal.currentAmount + amount });
+    }
   };
 
-  const deleteGoal = (id: string) => {
-    setGoals(prev => prev.filter(g => g.id !== id));
+  const handleDeleteGoal = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteGoalFromDb(user.uid, id);
+    } catch (error) {
+      console.error('Failed to delete goal:', error);
+      alert('Failed to delete goal. Please try again.');
+    }
   };
 
-  const resetData = () => {
-    setTransactions([]);
-    setBudgets([]);
-    setGoals([]);
-    setSettings(DEFAULT_SETTINGS);
-    localStorage.clear();
-    sessionStorage.clear();
-    setIsAuthenticated(false);
-    setCurrentView('login');
+  const handleUpdateSettings = async (newSettings: UserSettings) => {
+    if (!user) return;
+    setSettings(newSettings);
+    await saveUserSettings(user.uid, newSettings);
+  };
+
+  const resetData = async () => {
+    if (!user) return;
+    if (confirm('Are you sure you want to delete ALL your data? This cannot be undone!')) {
+      await deleteAllUserData(user.uid);
+      // Reset local state
+      setTransactions([]);
+      setBudgets([]);
+      setGoals([]);
+      setSettings(DEFAULT_SETTINGS);
+    }
   };
 
   const handleNavClick = (view: View) => {
     setCurrentView(view);
   };
 
+  // Show loading screen while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Loading Montra...</p>
+        </div>
+      </div>
+    );
+  }
+
   const renderView = () => {
-    if (!isAuthenticated) {
+    if (!user) {
       return (
         <Auth
-          onLogin={handleLogin}
           currentView={currentView === 'signup' ? 'signup' : 'login'}
           onSwitch={(view) => setCurrentView(view as View)}
         />
@@ -237,14 +233,14 @@ const App = () => {
           />
         );
       case 'transactions':
-        return <TransactionsList transactions={transactions} onDelete={deleteTransaction} currency={settings.currency} />;
+        return <TransactionsList transactions={transactions} onDelete={handleDeleteTransaction} currency={settings.currency} />;
       case 'budgets':
         return (
           <Budgets
             transactions={transactions}
             budgets={budgets}
-            onSaveBudget={saveBudget}
-            onDeleteBudget={deleteBudget}
+            onSaveBudget={handleSaveBudget}
+            onDeleteBudget={handleDeleteBudget}
             currency={settings.currency}
           />
         );
@@ -254,7 +250,7 @@ const App = () => {
             goals={goals}
             onAddGoal={addGoal}
             onUpdateGoal={updateGoalAmount}
-            onDeleteGoal={deleteGoal}
+            onDeleteGoal={handleDeleteGoal}
             currency={settings.currency}
           />
         );
@@ -262,7 +258,7 @@ const App = () => {
         return (
           <Settings
             settings={settings}
-            onUpdateSettings={setSettings}
+            onUpdateSettings={handleUpdateSettings}
             onResetData={resetData}
             transactions={transactions}
           />
@@ -282,7 +278,7 @@ const App = () => {
     }
   };
 
-  const showNav = isAuthenticated && currentView !== 'login' && currentView !== 'signup';
+  const showNav = user && currentView !== 'login' && currentView !== 'signup';
 
   return (
     <div className={`flex h-screen w-full overflow-hidden transition-colors duration-500 ${settings.isDarkMode ? 'dark' : 'bg-slate-50/50'} ${settings.theme === 'vibrant' ? 'vibrant-mode' : ''}`}>
@@ -341,11 +337,11 @@ const App = () => {
 
           {/* Footer Actions */}
           <div className="p-3 space-y-2 shrink-0 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-slate-900/50 dark:via-slate-900/20">
-            {/* Data Indicator */}
+            {/* Cloud Indicator */}
             <div className="w-full md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
               <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                <HardDrive size={16} className="text-emerald-500" />
-                Local Vault
+                <Cloud size={16} className="text-indigo-500" />
+                Cloud Synced
               </div>
             </div>
 
@@ -444,6 +440,15 @@ const App = () => {
         currency={settings.currency}
       />
     </div>
+  );
+};
+
+// Root App component with AuthProvider
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

@@ -1,10 +1,24 @@
-## Run Locally
+# Montra - Student Finance App
 
-**Prerequisites:**  Node.js
+## Project Structure
 
+- **frontend/**: The React/Vite application. All UI code lives here.
+- **backend/**: server-side logic (currently empty, using Firebase).
+- **db/**: Database rules and schema documentation.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## How to Run
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies (if first time):
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```

@@ -1,16 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { GlassCard, GlassButton, GlassInput } from '../components/ui/Glass';
-import { Mail, Lock, User, GraduationCap, ArrowRight, Sparkles, ShieldCheck, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
+import { Mail, Lock, User, GraduationCap, ArrowRight, Sparkles, ShieldCheck, Eye, EyeOff, ShieldAlert, Check, AlertCircle, CheckCircle } from 'lucide-react';
 import { View } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Props {
-  onLogin: (name: string, rememberMe: boolean) => void;
   currentView: 'login' | 'signup';
   onSwitch: (view: 'login' | 'signup') => void;
 }
 
-export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
+export const Auth: React.FC<Props> = ({ currentView, onSwitch }) => {
+  const { signIn, signUp, signInWithGoogle, resetPassword, error, clearError, loading } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -18,6 +20,9 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('montra_user_email');
@@ -27,31 +32,78 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (error) {
+      setAuthError(error.message);
+      setIsLoading(false);
+    }
+  }, [error]);
+
   // Transition between views
   const handleSwitch = (view: 'login' | 'signup') => {
     if (view === currentView) return;
     setIsAnimating(true);
+    setAuthError(null);
+    setSuccessMessage(null);
+    clearError();
     setTimeout(() => {
       onSwitch(view);
       setIsAnimating(false);
     }, 200);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setAuthError(null);
+    setSuccessMessage(null);
 
     if (rememberMe) {
       localStorage.setItem('montra_user_email', email);
     } else {
       localStorage.removeItem('montra_user_email');
     }
-    
-    // Simulate API call
-    setTimeout(() => {
-      onLogin(name || email.split('@')[0], rememberMe);
+
+    try {
+      if (currentView === 'signup') {
+        await signUp(email, password, name || email.split('@')[0]);
+      } else {
+        await signIn(email, password);
+      }
+      // Auth state change will be handled by AuthContext
+    } catch (err: any) {
+      setAuthError(err.message || 'An error occurred');
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setAuthError(err.message || 'Google sign-in failed');
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setAuthError('Please enter your email address first');
+      return;
+    }
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      await resetPassword(email);
+      setSuccessMessage('Password reset email sent! Check your inbox.');
+      setShowForgotPassword(false);
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to send reset email');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getPasswordStrength = (pass: string) => {
@@ -147,19 +199,39 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
             </div>
           )}
 
+          {/* Error Message */}
+          {authError && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3 animate-reveal">
+              <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+              <div>
+                <p className="text-sm font-medium text-red-700 dark:text-red-300">{authError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-start gap-3 animate-reveal">
+              <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={20} />
+              <div>
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
           {/* Tab Navigation */}
           <div className="relative flex bg-slate-100/50 dark:bg-white/5 p-1 rounded-2xl mb-8">
-            <div 
+            <div
               className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white dark:bg-white/10 shadow-sm rounded-xl transition-transform duration-300 ease-out"
               style={{ transform: currentView === 'login' ? 'translateX(0)' : 'translateX(100%)' }}
             />
-            <button 
+            <button
               onClick={() => handleSwitch('login')}
               className={`relative z-10 flex-1 py-2.5 text-xs font-black transition-colors duration-300 ${currentView === 'login' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
             >
               LOG IN
             </button>
-            <button 
+            <button
               onClick={() => handleSwitch('signup')}
               className={`relative z-10 flex-1 py-2.5 text-xs font-black transition-colors duration-300 ${currentView === 'signup' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
             >
@@ -175,9 +247,9 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <User className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={22} />
                   </div>
-                  <GlassInput 
-                    type="text" 
-                    placeholder="Alex Johnson" 
+                  <GlassInput
+                    type="text"
+                    placeholder="Alex Johnson"
                     className="pl-12 py-3.5"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -193,9 +265,9 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Mail className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={22} />
                 </div>
-                <GlassInput 
-                  type="email" 
-                  placeholder="alex@university.edu" 
+                <GlassInput
+                  type="email"
+                  placeholder="alex@university.edu"
                   className="pl-12 py-3.5"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -208,22 +280,28 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
               <div className="flex justify-between items-center px-1">
                 <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">Secure Password</label>
                 {currentView === 'login' && (
-                  <button type="button" className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors">FORGOT?</button>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors"
+                  >
+                    FORGOT?
+                  </button>
                 )}
               </div>
               <div className="relative group input-glow rounded-xl">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={22} />
                 </div>
-                <GlassInput 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="••••••••" 
+                <GlassInput
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
                   className="pl-12 pr-12 py-3.5"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
@@ -231,7 +309,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                   {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                 </button>
               </div>
-              
+
               {/* Dynamic Strength Indicator */}
               {currentView === 'signup' && password.length > 0 && (
                 <div className="animate-reveal px-1 space-y-1.5">
@@ -246,9 +324,9 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                   </div>
                   <div className="flex gap-1.5 h-1">
                     {[1, 2, 3, 4].map((i) => (
-                      <div 
-                        key={i} 
-                        className={`h-full flex-1 rounded-full transition-all duration-500 ${strength.score >= i ? strength.color : 'bg-slate-100 dark:bg-white/5'}`} 
+                      <div
+                        key={i}
+                        className={`h-full flex-1 rounded-full transition-all duration-500 ${strength.score >= i ? strength.color : 'bg-slate-100 dark:bg-white/5'}`}
                         style={{ boxShadow: strength.score >= i ? `0 0 10px ${strength.color.replace('bg-', '')}40` : 'none' }}
                       />
                     ))}
@@ -274,7 +352,11 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
             )}
 
             <div className="pt-2 animate-reveal" style={{ animationDelay: '0.3s' }}>
-              <GlassButton type="submit" className="w-full py-4 text-sm font-black bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/20 dark:shadow-none transform active:scale-[0.98] transition-all border-none group primary-button-shine">
+              <GlassButton
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 text-sm font-black bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/20 dark:shadow-none transform active:scale-[0.98] transition-all border-none group primary-button-shine disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {currentView === 'login' ? 'SIGN IN TO MONTRA' : 'CREATE STUDENT ACCOUNT'}
                 <ArrowRight size={22} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </GlassButton>
@@ -287,16 +369,18 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
           </div>
 
           <div className="grid grid-cols-1 gap-4 animate-reveal" style={{ animationDelay: '0.5s' }}>
-            <button 
-              type="button" 
-              className="group relative flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:shadow-lg text-slate-700 dark:text-slate-200 font-black text-[11px] active:scale-[0.97]"
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="group relative flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:shadow-lg text-slate-700 dark:text-slate-200 font-black text-[11px] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center justify-center p-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm group-hover:scale-110 transition-transform">
                 <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                 </svg>
               </div>
               CONTINUE WITH GOOGLE
