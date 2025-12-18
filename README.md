@@ -18,6 +18,9 @@
    npm install
    ```
 
+## Deployment Status
+Last updated: 2025-12-18 (Triggered via API)
+
 3. Start the development server:
    ```bash
    npm run dev
