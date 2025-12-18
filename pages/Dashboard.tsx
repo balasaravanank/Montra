@@ -5,7 +5,7 @@ import { Transaction, Category, Budget, SavingsGoal, UserProfile } from '../type
 import { GlassCard, GlassButton } from '../components/ui/Glass';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
 import { getFinancialInsight } from '../services/geminiService';
-import { Sparkles, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
+import { Sparkles, TrendingUp, TrendingDown, ArrowUpRight, Wallet } from 'lucide-react';
 
 interface Props {
   transactions: Transaction[];
@@ -190,20 +190,37 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <GlassCard hoverEffect className="relative overflow-hidden group">
-          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 dark:text-white transition-opacity"><TrendingUp size={80} /></div>
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Total Balance</p>
-          <h2 className="text-3xl font-semibold text-slate-800 dark:text-white">{currency}{balance.toFixed(2)}</h2>
-          <div className="mt-4 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
+          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 dark:text-white transition-opacity"><Wallet size={80} /></div>
+          {/* Subtle Glow for Total Balance */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+          
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Total Balance</p>
+          <h2 className="text-3xl font-semibold text-slate-800 dark:text-white relative z-10">{currency}{balance.toFixed(2)}</h2>
+          <div className="mt-4 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 relative z-10">
             <span className="text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5"><ArrowUpRight size={10} /> +2.5%</span> vs last month
           </div>
         </GlassCard>
-        <GlassCard hoverEffect>
-           <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Income</p>
-           <h2 className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400">+{currency}{income.toFixed(2)}</h2>
+
+        <GlassCard hoverEffect className="relative overflow-hidden group">
+           <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 text-emerald-500 transition-opacity">
+             <TrendingUp size={80} />
+           </div>
+           {/* Emerald Glow for Income */}
+           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+           
+           <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Income</p>
+           <h2 className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 relative z-10">+{currency}{income.toFixed(2)}</h2>
         </GlassCard>
-        <GlassCard hoverEffect>
-           <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Expenses</p>
-           <h2 className="text-3xl font-semibold text-red-500 dark:text-red-400">-{currency}{expenses.toFixed(2)}</h2>
+
+        <GlassCard hoverEffect className="relative overflow-hidden group">
+           <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 text-red-500 transition-opacity">
+             <TrendingDown size={80} />
+           </div>
+           {/* Red Glow for Expenses */}
+           <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+
+           <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Expenses</p>
+           <h2 className="text-3xl font-semibold text-red-500 dark:text-red-400 relative z-10">-{currency}{expenses.toFixed(2)}</h2>
         </GlassCard>
       </div>
 
