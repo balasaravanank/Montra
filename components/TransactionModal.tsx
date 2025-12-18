@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard, GlassButton, GlassInput, GlassSelect } from './ui/Glass';
 import { Category, Transaction, TransactionType } from '../types';
-import { X, CheckCircle2, Coins, Sparkles as SparklesIcon, Receipt, Flame, BellRing, Calendar } from 'lucide-react';
+import { X, CheckCircle2, Coins, Sparkles as SparklesIcon, Receipt, Flame, BellRing, Calendar, Plus, ArrowLeft } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -36,7 +36,9 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
   const [date, setDate] = useState(getTodayString());
   const [source, setSource] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
-  const [category, setCategory] = useState<Category>(Category.FOOD);
+  const [category, setCategory] = useState<Category | string>(Category.FOOD);
+  const [customCategory, setCustomCategory] = useState('');
+  const [isCustomCategoryMode, setIsCustomCategoryMode] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [xpProgress, setXpProgress] = useState(45);
   const [displayXp, setDisplayXp] = useState(850);
@@ -49,6 +51,8 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
       // Always reset date to today when opening a new blank transaction
       if (!description && !amount) {
         setDate(getTodayString());
+        setIsCustomCategoryMode(false);
+        setCustomCategory('');
       }
     }
   }, [isOpen, description, amount]);
@@ -64,7 +68,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
         delay: Math.random() * 0.15
       }));
       setParticles(newParticles);
-      
+
       // 2. Animate XP bar & Numerical Counter
       setTimeout(() => {
         setXpProgress(60);
@@ -98,7 +102,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
     // If selected date is in the past/future, set to noon local time to avoid timezone shifts.
     let finalDateIso = '';
     const todayStr = getTodayString();
-    
+
     if (date === todayStr) {
       finalDateIso = new Date().toISOString();
     } else {
@@ -106,24 +110,29 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
       finalDateIso = new Date(`${date}T12:00:00`).toISOString();
     }
 
+    const finalCategory = isCustomCategoryMode ? customCategory : category;
+
     onSave({
       description,
       amount: parseFloat(amount),
       type,
-      category,
+      category: finalCategory,
       date: finalDateIso,
       source: type === 'income' ? source : undefined
     });
-    
+
     // Show success animation
     setIsSuccess(true);
-    
+
     // Reset and close after a delay
     setTimeout(() => {
       setDescription('');
       setAmount('');
       setSource('');
+      setSource('');
       setDate(getTodayString());
+      setIsCustomCategoryMode(false);
+      setCustomCategory('');
       setIsSuccess(false);
       onClose();
     }, 3200);
@@ -136,6 +145,8 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
     } else {
       setCategory(Category.FOOD);
     }
+    setIsCustomCategoryMode(false);
+    setCustomCategory('');
   };
 
   const handleCalendarClick = () => {
@@ -209,7 +220,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
         <GlassCard className={`bg-white/95 dark:bg-slate-900/95 shadow-2xl border-white/50 dark:border-white/5 transition-all duration-500 overflow-visible ${isSuccess ? 'scale-105' : 'scale-100'}`}>
           {isSuccess ? (
             <div className="py-10 flex flex-col items-center justify-center animate-fade-in text-center relative">
-              
+
               {/* Toast Notification Banner at Top */}
               <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full px-6 z-30 pointer-events-none">
                 <div className="bg-slate-900 dark:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-xl flex items-center justify-center gap-2 animate-toast-in border border-slate-800 dark:border-indigo-500/50">
@@ -239,16 +250,16 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
               {/* Floating XP Indicator */}
               <div className="absolute top-1/2 left-1/2 pointer-events-none z-20">
-                 <div className="animate-float-up-fade text-indigo-600 dark:text-indigo-400 font-bold text-xl drop-shadow-md flex items-center gap-2 whitespace-nowrap bg-white/95 dark:bg-slate-800/95 px-4 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-500/20 shadow-xl">
-                   <SparklesIcon size={24} className="text-amber-400" fill="currentColor" />
-                   +15 Student XP
-                 </div>
+                <div className="animate-float-up-fade text-indigo-600 dark:text-indigo-400 font-bold text-xl drop-shadow-md flex items-center gap-2 whitespace-nowrap bg-white/95 dark:bg-slate-800/95 px-4 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-500/20 shadow-xl">
+                  <SparklesIcon size={24} className="text-amber-400" fill="currentColor" />
+                  +15 Student XP
+                </div>
               </div>
 
               <div className="relative mb-8 mt-6">
                 {/* Visual "Ding" Pulse */}
                 <div className="absolute inset-0 bg-indigo-400/30 rounded-full" style={{ animation: 'ping-soft 1s ease-out forwards', animationDelay: '0.4s' }} />
-                
+
                 <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
                 <div className="relative bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-7 rounded-full shadow-2xl shadow-indigo-200 dark:shadow-none animate-coin-spin-3d">
                   <Coins size={64} />
@@ -257,13 +268,13 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                   <CheckCircle2 size={32} />
                 </div>
               </div>
-              
+
               <div className="space-y-5 w-full px-8">
                 <div>
                   <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Level Up Soon!</h2>
                   <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                    {type === 'expense' 
-                      ? "Wise tracking habits detected." 
+                    {type === 'expense'
+                      ? "Wise tracking habits detected."
                       : "Your future self is high-fiving you!"}
                   </p>
                 </div>
@@ -280,7 +291,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                     </span>
                   </div>
                   <div className="h-3 w-full bg-slate-200/50 dark:bg-white/10 rounded-full overflow-hidden shadow-inner p-0.5 relative">
-                    <div 
+                    <div
                       className={`h-full bg-gradient-to-r from-indigo-500 via-indigo-400 to-purple-600 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(79,70,229,0.4)] relative overflow-hidden ${isSuccess ? 'shimmer-bar' : ''}`}
                       style={{ width: `${xpProgress}%` }}
                     />
@@ -330,10 +341,10 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                   <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Amount</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold">{currency}</span>
-                    <GlassInput 
-                      type="number" 
-                      step="0.01" 
-                      placeholder="0.00" 
+                    <GlassInput
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
                       className="pl-8 text-lg font-bold"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
@@ -343,36 +354,36 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                 </div>
 
                 <div className="space-y-1.5">
-                   <div className="flex justify-between items-center px-1">
-                      <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Date</label>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => setDate(getYesterdayString())} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-md">Yesterday</button>
-                        <button type="button" onClick={() => setDate(getTodayString())} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-md">Today</button>
-                      </div>
-                   </div>
-                   <div className="relative group cursor-pointer" onClick={handleCalendarClick}>
-                     <div 
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors z-10 pointer-events-none"
-                     >
-                       <Calendar size={22} />
-                     </div>
-                     <GlassInput 
-                       ref={dateInputRef}
-                       type="date"
-                       value={date}
-                       onChange={(e) => setDate(e.target.value)}
-                       className="pl-12 font-medium cursor-pointer hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors w-full"
-                       onClick={handleCalendarClick}
-                     />
-                   </div>
+                  <div className="flex justify-between items-center px-1">
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Date</label>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => setDate(getYesterdayString())} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-md">Yesterday</button>
+                      <button type="button" onClick={() => setDate(getTodayString())} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-md">Today</button>
+                    </div>
+                  </div>
+                  <div className="relative group cursor-pointer" onClick={handleCalendarClick}>
+                    <div
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors z-10 pointer-events-none"
+                    >
+                      <Calendar size={22} />
+                    </div>
+                    <GlassInput
+                      ref={dateInputRef}
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="pl-12 font-medium cursor-pointer hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors w-full"
+                      onClick={handleCalendarClick}
+                    />
+                  </div>
                 </div>
 
                 {type === 'income' && (
                   <div className="animate-fade-in space-y-1.5">
                     <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Source</label>
-                    <GlassInput 
-                      type="text" 
-                      placeholder="e.g. Scholarship, Paycheck..." 
+                    <GlassInput
+                      type="text"
+                      placeholder="e.g. Scholarship, Paycheck..."
                       value={source}
                       onChange={(e) => setSource(e.target.value)}
                     />
@@ -381,9 +392,9 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Description</label>
-                  <GlassInput 
-                    type="text" 
-                    placeholder="What did you buy?" 
+                  <GlassInput
+                    type="text"
+                    placeholder="What did you buy?"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
@@ -392,14 +403,47 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                 <div className="space-y-1.5">
                   <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Category</label>
                   <div className="relative z-50">
-                    <GlassSelect value={category} onChange={(e) => setCategory(e.target.value as Category)}>
-                      {Object.values(Category).filter(c => {
-                        const isIncomeCat = INCOME_CATEGORIES.includes(c);
-                        return type === 'income' ? isIncomeCat : !isIncomeCat;
-                      }).map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </GlassSelect>
+                    {isCustomCategoryMode ? (
+                      <div className="flex gap-2 animate-fade-in">
+                        <div className="relative flex-1">
+                          <GlassInput
+                            type="text"
+                            placeholder="Enter category name..."
+                            value={customCategory}
+                            onChange={(e) => setCustomCategory(e.target.value)}
+                            autoFocus
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsCustomCategoryMode(false)}
+                          className="p-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 transition-colors"
+                        >
+                          <ArrowLeft size={20} />
+                        </button>
+                      </div>
+                    ) : (
+                      <GlassSelect
+                        value={category}
+                        onChange={(e) => {
+                          if (e.target.value === 'CUSTOM_NEW') {
+                            setIsCustomCategoryMode(true);
+                            setCustomCategory('');
+                          } else {
+                            setCategory(e.target.value as Category);
+                          }
+                        }}
+                        direction="up"
+                      >
+                        {Object.values(Category).filter(c => {
+                          const isIncomeCat = INCOME_CATEGORIES.includes(c);
+                          return type === 'income' ? isIncomeCat : !isIncomeCat;
+                        }).map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                        <option value="CUSTOM_NEW" className="font-bold text-indigo-600 dark:text-indigo-400">+ Add New Category</option>
+                      </GlassSelect>
+                    )}
                   </div>
                 </div>
 

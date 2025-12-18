@@ -1,155 +1,169 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Montra</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-            transitionTimingFunction: {
-              'ios': 'cubic-bezier(0.32, 0.72, 0, 1)',
-              'ios-spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            },
-            colors: {
-              glass: {
-                100: 'rgba(255, 255, 255, 0.1)',
-                200: 'rgba(255, 255, 255, 0.2)',
-                300: 'rgba(255, 255, 255, 0.3)',
-                border: 'rgba(255, 255, 255, 0.2)',
-                surface: 'rgba(255, 255, 255, 0.65)',
-              }
-            },
-            animation: {
-              'float': 'float 6s ease-in-out infinite',
-              'fade-in': 'fadeIn 0.5s ease-ios forwards',
-              'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'page-enter': 'pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            },
-            keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-              },
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideUp: {
-                '0%': { transform: 'translateY(20px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-              pageEnter: {
-                '0%': { transform: 'scale(0.96) translateY(10px)', opacity: '0' },
-                '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
-              },
-              scaleIn: {
-                '0%': { transform: 'scale(0.9)' },
-                '100%': { transform: 'scale(1)' },
-              }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Montra</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          transitionTimingFunction: {
+            'ios': 'cubic-bezier(0.32, 0.72, 0, 1)',
+            'ios-spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          },
+          colors: {
+            glass: {
+              100: 'rgba(255, 255, 255, 0.1)',
+              200: 'rgba(255, 255, 255, 0.2)',
+              300: 'rgba(255, 255, 255, 0.3)',
+              border: 'rgba(255, 255, 255, 0.2)',
+              surface: 'rgba(255, 255, 255, 0.65)',
             }
           },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'fade-in': 'fadeIn 0.5s ease-ios forwards',
+            'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'page-enter': 'pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pageEnter: {
+              '0%': { transform: 'scale(0.96) translateY(10px)', opacity: '0' },
+              '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.9)' },
+              '100%': { transform: 'scale(1)' },
+            }
+          }
         },
-      }
-    </script>
-    <style>
-      body {
-        background: #fdfdfd;
-        background-image: 
-          radial-gradient(at 0% 0%, rgba(220, 220, 250, 0.3) 0px, transparent 50%),
-          radial-gradient(at 100% 0%, rgba(250, 220, 220, 0.3) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(220, 250, 220, 0.3) 0px, transparent 50%),
-          radial-gradient(at 0% 100%, rgba(240, 240, 250, 0.3) 0px, transparent 50%);
-        background-attachment: fixed;
-        transition: background-color 0.5s ease;
-      }
-      
-      .dark body {
-        /* Deep Cream Violet / Dark Violet Theme */
-        background: #0d0b16; 
-        background-image: 
-          radial-gradient(at 0% 0%, rgba(60, 40, 100, 0.4) 0px, transparent 50%),
-          radial-gradient(at 100% 0%, rgba(80, 50, 130, 0.3) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(50, 30, 90, 0.4) 0px, transparent 50%);
-      }
+      },
+    }
+  </script>
+  <style>
+    body {
+      background: #fdfdfd;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(220, 220, 250, 0.3) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(250, 220, 220, 0.3) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(220, 250, 220, 0.3) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(240, 240, 250, 0.3) 0px, transparent 50%);
+      background-attachment: fixed;
+      transition: background-color 0.5s ease;
+    }
 
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-        transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      }
+    .dark body {
+      /* Deep Cream Violet / Dark Violet Theme */
+      background: #0d0b16;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(60, 40, 100, 0.4) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(80, 50, 130, 0.3) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(50, 30, 90, 0.4) 0px, transparent 50%);
+    }
 
-      .dark .glass-panel {
-        background: rgba(20, 16, 35, 0.65);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-      }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
 
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-      }
-      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-      }
+    .dark .glass-panel {
+      background: rgba(20, 16, 35, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    }
 
-      /* Native Date Picker Styling - Hidden to use custom UI trigger */
-      input[type="date"] {
-        position: relative;
-        cursor: pointer;
-      }
-      input[type="date"]::-webkit-calendar-picker-indicator {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        color: transparent;
-        background: transparent;
-        cursor: pointer;
-        opacity: 0;
-      }
-      
-      * {
-        transition: color 0.2s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.2s cubic-bezier(0.32, 0.72, 0, 1);
-      }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0"
-  }
-}
-</script>
-</head>
-  <body class="text-slate-800 dark:text-slate-100 antialiased h-screen overflow-hidden selection:bg-indigo-100 selection:text-indigo-900 dark:selection:bg-indigo-900 dark:selection:text-indigo-100">
-    <div id="root"></div>
-  </body>
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow:
+        0 8px 32px 0 rgba(31, 38, 135, 0.15),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .dark .liquid-glass {
+      background: rgba(17, 25, 40, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.3),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Native Date Picker Styling - Hidden to use custom UI trigger */
+    input[type="date"] {
+      position: relative;
+      cursor: pointer;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      color: transparent;
+      background: transparent;
+      cursor: pointer;
+      opacity: 0;
+    }
+
+    * {
+      transition: color 0.2s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+  </style>
+
+<body
+  class="text-slate-800 dark:text-slate-100 antialiased h-screen overflow-hidden selection:bg-indigo-100 selection:text-indigo-900 dark:selection:bg-indigo-900 dark:selection:text-indigo-100">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

@@ -24,14 +24,14 @@ export interface Transaction {
   id: string;
   amount: number;
   description: string;
-  category: Category;
+  category: Category | string;
   date: string;
   type: TransactionType;
   source?: string;
 }
 
 export interface Budget {
-  category: Category;
+  category: Category | string;
   limit: number;
 }
 
