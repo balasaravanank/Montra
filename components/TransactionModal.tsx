@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard, GlassButton, GlassInput, GlassSelect } from './ui/Glass';
 import { Category, Transaction, TransactionType } from '../types';
-import { X, CheckCircle2, Coins, Sparkles as SparklesIcon, Receipt, Flame, BellRing } from 'lucide-react';
+import { X, CheckCircle2, Coins, Sparkles as SparklesIcon, Receipt, Flame, BellRing, Calendar } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -12,8 +12,28 @@ interface Props {
 }
 
 export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, currency }) => {
+  // Helper to get local date string YYYY-MM-DD
+  const getTodayString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const getYesterdayString = () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(getTodayString());
   const [source, setSource] = useState('');
   const [type, setType] = useState<TransactionType>('expense');
   const [category, setCategory] = useState<Category>(Category.FOOD);
@@ -23,6 +43,15 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
   // Confetti particles state
   const [particles, setParticles] = useState<{ id: number; color: string; angle: number; delay: number }[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Always reset date to today when opening a new blank transaction
+      if (!description && !amount) {
+        setDate(getTodayString());
+      }
+    }
+  }, [isOpen, description, amount]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -62,14 +91,27 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description || !amount) return;
+    if (!description || !amount || !date) return;
+
+    // Date Logic: 
+    // If selected date is today, use current ISO time to keep sort order correct relative to recent actions.
+    // If selected date is in the past/future, set to noon local time to avoid timezone shifts.
+    let finalDateIso = '';
+    const todayStr = getTodayString();
+    
+    if (date === todayStr) {
+      finalDateIso = new Date().toISOString();
+    } else {
+      // Create date at noon local time to ensure it stays on the selected calendar day regardless of timezone
+      finalDateIso = new Date(`${date}T12:00:00`).toISOString();
+    }
 
     onSave({
       description,
       amount: parseFloat(amount),
       type,
       category,
-      date: new Date().toISOString(),
+      date: finalDateIso,
       source: type === 'income' ? source : undefined
     });
     
@@ -81,6 +123,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
       setDescription('');
       setAmount('');
       setSource('');
+      setDate(getTodayString());
       setIsSuccess(false);
       onClose();
     }, 3200);
@@ -92,6 +135,19 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
       setCategory(Category.INCOME);
     } else {
       setCategory(Category.FOOD);
+    }
+  };
+
+  const handleCalendarClick = () => {
+    if (dateInputRef.current) {
+      try {
+        dateInputRef.current.showPicker();
+      } catch (err) {
+        console.log('showPicker not supported or failed', err);
+        // Fallback: try focusing the input which often opens picker on mobile
+        dateInputRef.current.focus();
+        dateInputRef.current.click();
+      }
     }
   };
 
@@ -284,6 +340,31 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                       autoFocus
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                   <div className="flex justify-between items-center px-1">
+                      <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Date</label>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setDate(getYesterdayString())} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-md">Yesterday</button>
+                        <button type="button" onClick={() => setDate(getTodayString())} className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-md">Today</button>
+                      </div>
+                   </div>
+                   <div className="relative group cursor-pointer" onClick={handleCalendarClick}>
+                     <div 
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors z-10 pointer-events-none"
+                     >
+                       <Calendar size={18} />
+                     </div>
+                     <GlassInput 
+                       ref={dateInputRef}
+                       type="date"
+                       value={date}
+                       onChange={(e) => setDate(e.target.value)}
+                       className="pl-12 font-medium cursor-pointer hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors w-full"
+                       onClick={handleCalendarClick}
+                     />
+                   </div>
                 </div>
 
                 {type === 'income' && (

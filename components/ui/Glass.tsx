@@ -1,5 +1,5 @@
 
-import React, { ButtonHTMLAttributes, InputHTMLAttributes, useState, useRef, useEffect } from 'react';
+import React, { ButtonHTMLAttributes, InputHTMLAttributes, useState, useRef, useEffect, forwardRef } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
 interface GlassCardProps {
@@ -33,12 +33,15 @@ export const GlassButton: React.FC<GlassButtonProps> = ({ className = '', varian
   );
 };
 
-export const GlassInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({ className = '', ...props }) => (
+export const GlassInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  ({ className = '', ...props }, ref) => (
   <input 
+    ref={ref}
     className={`w-full bg-white/40 dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-indigo-500/20 focus:border-slate-400 dark:focus:border-indigo-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-800 dark:text-slate-100 ${className}`}
     {...props}
   />
-);
+));
+GlassInput.displayName = 'GlassInput';
 
 interface GlassSelectProps {
   className?: string;

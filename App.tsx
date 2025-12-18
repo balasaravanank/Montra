@@ -10,7 +10,7 @@ import { Settings } from './pages/Settings';
 import { Auth } from './pages/Auth';
 import { TransactionModal } from './components/TransactionModal';
 import { GlassCard } from './components/ui/Glass';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, HardDrive } from 'lucide-react';
 
 const DEFAULT_SETTINGS: UserSettings = {
   currency: '$',
@@ -23,49 +23,87 @@ const DEFAULT_SETTINGS: UserSettings = {
   }
 };
 
+const SEED_TRANSACTIONS: Transaction[] = [
+  { id: 'seed-1', amount: 12.50, description: 'Campus Coffee Roasters', category: Category.FOOD, date: new Date().toISOString(), type: 'expense' },
+  { id: 'seed-2', amount: 45.00, description: 'Textbook Rental', category: Category.ACADEMICS, date: new Date(Date.now() - 86400000).toISOString(), type: 'expense' },
+  { id: 'seed-3', amount: 1500.00, description: 'Semester Grant', category: Category.SCHOLARSHIP, date: new Date(Date.now() - 172800000).toISOString(), type: 'income', source: 'Financial Aid' },
+  { id: 'seed-4', amount: 120.00, description: 'Grocery Run', category: Category.GROCERIES, date: new Date(Date.now() - 259200000).toISOString(), type: 'expense' },
+  { id: 'seed-5', amount: 15.99, description: 'Spotify Premium', category: Category.SUBSCRIPTIONS, date: new Date(Date.now() - 345600000).toISOString(), type: 'expense' },
+];
+
 const App = () => {
+  // Initialize Auth State directly from storage to prevent flash of login screen
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('montra_auth') === 'true' || sessionStorage.getItem('montra_auth') === 'true';
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('montra_auth') === 'true' || sessionStorage.getItem('montra_auth') === 'true';
+    }
+    return false;
   });
+
   const [currentView, setCurrentView] = useState<View>(() => {
-    const auth = localStorage.getItem('montra_auth') === 'true' || sessionStorage.getItem('montra_auth') === 'true';
-    return auth ? 'dashboard' : 'login';
+    if (typeof window !== 'undefined') {
+      const auth = localStorage.getItem('montra_auth') === 'true' || sessionStorage.getItem('montra_auth') === 'true';
+      return auth ? 'dashboard' : 'login';
+    }
+    return 'login';
   });
+
   const [isModalOpen, setModalOpen] = useState(false);
   
-  // State
+  // State initialization with error handling
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem('montra_transactions');
-    return saved ? JSON.parse(saved) : [];
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('montra_transactions');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to parse transactions", e);
+      return [];
+    }
   });
 
   const [budgets, setBudgets] = useState<Budget[]>(() => {
-    const saved = localStorage.getItem('montra_budgets');
-    if (saved) return JSON.parse(saved);
-    return [
-      { category: Category.UTILITIES, limit: 150 },
-      { category: Category.SHOPPING, limit: 200 },
-      { category: Category.GROCERIES, limit: 250 },
-      { category: Category.TRANSPORTATION, limit: 80 },
-      { category: Category.PERSONAL_CARE, limit: 50 }
-    ];
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('montra_budgets');
+      if (saved) return JSON.parse(saved);
+      return [
+        { category: Category.UTILITIES, limit: 150 },
+        { category: Category.SHOPPING, limit: 200 },
+        { category: Category.GROCERIES, limit: 250 },
+        { category: Category.TRANSPORTATION, limit: 80 },
+        { category: Category.PERSONAL_CARE, limit: 50 }
+      ];
+    } catch (e) {
+      return [];
+    }
   });
 
   const [goals, setGoals] = useState<SavingsGoal[]>(() => {
-    const saved = localStorage.getItem('montra_goals');
-    if (saved) return JSON.parse(saved);
-    return [
-      { id: '1', name: "Spring Break '25", targetAmount: 1200, currentAmount: 450, icon: '✈️' },
-      { id: '2', name: 'New MacBook Pro', targetAmount: 2000, currentAmount: 800, icon: '💻' }
-    ];
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('montra_goals');
+      if (saved) return JSON.parse(saved);
+      return [
+        { id: '1', name: "Spring Break '25", targetAmount: 1200, currentAmount: 450, icon: '✈️' },
+        { id: '2', name: 'New MacBook Pro', targetAmount: 2000, currentAmount: 800, icon: '💻' }
+      ];
+    } catch (e) {
+      return [];
+    }
   });
 
   const [settings, setSettings] = useState<UserSettings>(() => {
-    const saved = localStorage.getItem('montra_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if (typeof window === 'undefined') return DEFAULT_SETTINGS;
+    try {
+      const saved = localStorage.getItem('montra_settings');
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    } catch (e) {
+      return DEFAULT_SETTINGS;
+    }
   });
   
-  // Persist State
+  // Persist State Effects
   useEffect(() => {
     localStorage.setItem('montra_transactions', JSON.stringify(transactions));
   }, [transactions]);
@@ -80,21 +118,35 @@ const App = () => {
 
   useEffect(() => {
     localStorage.setItem('montra_settings', JSON.stringify(settings));
+    // Apply theme
+    if (settings.isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [settings]);
 
   const handleLogin = (name: string, rememberMe: boolean) => {
-    setIsAuthenticated(true);
-    setSettings(prev => ({
-      ...prev,
-      profile: { ...prev.profile, name }
-    }));
+    // update settings immediately
+    const newSettings = {
+      ...settings,
+      profile: { ...settings.profile, name }
+    };
+    setSettings(newSettings);
+    localStorage.setItem('montra_settings', JSON.stringify(newSettings));
     
+    // Check if we need to seed data for a "fresh" feel
+    if (transactions.length === 0) {
+      setTransactions(SEED_TRANSACTIONS);
+    }
+
     if (rememberMe) {
       localStorage.setItem('montra_auth', 'true');
     } else {
       sessionStorage.setItem('montra_auth', 'true');
     }
     
+    setIsAuthenticated(true);
     setCurrentView('dashboard');
   };
 
@@ -270,6 +322,14 @@ const App = () => {
 
           {/* Footer Actions */}
           <div className="p-3 space-y-2 shrink-0 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-slate-900 dark:via-slate-900/50">
+             {/* Data Indicator */}
+             <div className="w-full md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+               <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
+                  <HardDrive size={12} className="text-emerald-500" />
+                  Local Vault
+               </div>
+             </div>
+
              {/* Pro Tip Card */}
             <div className="w-full md:h-0 md:group-hover:h-auto overflow-hidden md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-100 ease-ios">
                <GlassCard className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-4 mb-2 shadow-lg shadow-indigo-500/20">
