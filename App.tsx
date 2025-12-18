@@ -85,8 +85,8 @@ const App = () => {
       const saved = localStorage.getItem('montra_goals');
       if (saved) return JSON.parse(saved);
       return [
-        { id: '1', name: "Spring Break '25", targetAmount: 1200, currentAmount: 450, icon: '✈️' },
-        { id: '2', name: 'New MacBook Pro', targetAmount: 2000, currentAmount: 800, icon: '💻' }
+        { id: '1', name: "Spring Break '25", targetAmount: 1200, currentAmount: 450, icon: 'travel' },
+        { id: '2', name: 'New MacBook Pro', targetAmount: 2000, currentAmount: 800, icon: 'tech' }
       ];
     } catch (e) {
       return [];
@@ -285,7 +285,7 @@ const App = () => {
   const showNav = isAuthenticated && currentView !== 'login' && currentView !== 'signup';
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden transition-colors duration-500 ${settings.isDarkMode ? 'dark bg-slate-950' : 'bg-slate-50/50'} ${settings.theme === 'vibrant' ? 'vibrant-mode' : ''}`}>
+    <div className={`flex h-screen w-full overflow-hidden transition-colors duration-500 ${settings.isDarkMode ? 'dark' : 'bg-slate-50/50'} ${settings.theme === 'vibrant' ? 'vibrant-mode' : ''}`}>
       
       {/* Desktop Sidebar (Hidden on Mobile) */}
       {showNav && (
@@ -330,7 +330,7 @@ const App = () => {
                   }`}
                 >
                   <div className="w-14 flex items-center justify-center shrink-0">
-                     <item.icon size={20} className={`transition-transform duration-300 ease-ios ${isActive ? '' : 'group-hover/item:scale-110'}`} />
+                     <item.icon size={24} className={`transition-transform duration-300 ease-ios ${isActive ? '' : 'group-hover/item:scale-110'}`} />
                   </div>
                   <span className={`whitespace-nowrap font-medium text-sm transition-all duration-300 ease-ios absolute left-14 md:opacity-0 md:group-hover:opacity-100 md:transform md:translate-x-4 md:group-hover:translate-x-0 md:delay-75`}>
                     {item.label}
@@ -341,11 +341,11 @@ const App = () => {
           </nav>
 
           {/* Footer Actions */}
-          <div className="p-3 space-y-2 shrink-0 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-slate-900 dark:via-slate-900/50">
+          <div className="p-3 space-y-2 shrink-0 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-slate-900/50 dark:via-slate-900/20">
              {/* Data Indicator */}
              <div className="w-full md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                  <HardDrive size={12} className="text-emerald-500" />
+                  <HardDrive size={16} className="text-emerald-500" />
                   Local Vault
                </div>
              </div>
@@ -355,7 +355,7 @@ const App = () => {
                <GlassCard className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-4 mb-2 shadow-lg shadow-indigo-500/20">
                 <div className="flex items-start gap-3">
                   <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <Plus size={14} />
+                    <Plus size={18} />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white mb-0.5">Quick Tip</p>
@@ -370,7 +370,7 @@ const App = () => {
               className="w-full flex items-center h-12 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 ease-ios whitespace-nowrap overflow-hidden relative active:scale-95"
             >
                <div className="w-14 flex items-center justify-center shrink-0">
-                 <LogOut size={20} />
+                 <LogOut size={24} />
                </div>
                <span className="absolute left-14 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 ease-ios">Sign Out</span>
             </button>
@@ -423,7 +423,7 @@ const App = () => {
                 }`}
               >
                 <div className={`transition-all duration-300 ${isActive ? 'scale-110 -translate-y-1' : ''}`}>
-                  <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                  <item.icon size={26} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
                 {isActive && (
                    <span className="absolute -bottom-1 w-1 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-scale-in" />
@@ -444,7 +444,7 @@ const App = () => {
             transition-all duration-500 ease-ios z-50 hover:scale-110 active:scale-95 border-2 border-white/20
           `}
         >
-          <Plus size={26} />
+          <Plus size={32} />
         </button>
       )}
 

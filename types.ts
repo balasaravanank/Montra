@@ -35,12 +35,20 @@ export interface Budget {
   limit: number;
 }
 
+export const PRESET_GOAL_ICONS = [
+  'target', 'travel', 'tech', 'car', 'home', 'education', 'music', 'fashion',
+  'phone', 'camera', 'bike', 'food', 'gift', 'savings', 'vacation', 'sport',
+  'watch', 'game', 'jewelry', 'pet', 'art', 'camping', 'work'
+] as const;
+
+export type GoalIcon = typeof PRESET_GOAL_ICONS[number] | string;
+
 export interface SavingsGoal {
   id: string;
   name: string;
   targetAmount: number;
   currentAmount: number;
-  icon: string;
+  icon: GoalIcon;
 }
 
 export interface UserProfile {

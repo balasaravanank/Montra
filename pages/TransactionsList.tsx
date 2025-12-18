@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Transaction, Category, TransactionType } from '../types';
 import { GlassCard, GlassInput, GlassSelect } from '../components/ui/Glass';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
-import { Search, Trash2, Filter, Calendar, ListFilter } from 'lucide-react';
+import { Search, Trash2, Filter, Calendar, ListFilter, SearchX } from 'lucide-react';
 
 interface Props {
   transactions: Transaction[];
@@ -77,14 +77,14 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, curr
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${showFilters ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-lg' : 'bg-white/50 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/15'}`}
         >
-          <Filter size={14} />
+          <Filter size={16} />
           {showFilters ? 'Hide' : 'Filters'}
         </button>
       </div>
 
       <div className="space-y-4 relative z-20">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-5 h-5" />
           <GlassInput 
             placeholder="Search by name, category, or source..." 
             className="pl-11"
@@ -97,7 +97,7 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, curr
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-slide-up">
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
-                <ListFilter size={10} /> Type
+                <ListFilter size={14} /> Type
               </label>
               <GlassSelect value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)}>
                 <option value="all">All Types</option>
@@ -108,7 +108,7 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, curr
 
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
-                <Calendar size={10} /> Date Range
+                <Calendar size={14} /> Date Range
               </label>
               <GlassSelect value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
                 <option value="all">All Time</option>
@@ -120,7 +120,7 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, curr
 
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
-                <Filter size={10} /> Category
+                <Filter size={14} /> Category
               </label>
               <GlassSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as any)}>
                 <option value="all">All Categories</option>
@@ -149,8 +149,10 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, curr
 
       <div className="space-y-3 relative z-10">
         {filteredTransactions.length === 0 ? (
-           <div className="text-center py-24 glass-panel rounded-3xl border-dashed border-2 border-slate-200 dark:border-white/5 bg-white/30 dark:bg-transparent">
-             <div className="text-4xl mb-4 opacity-40">🔍</div>
+           <div className="text-center py-24 glass-panel rounded-3xl border-dashed border-2 border-slate-200 dark:border-white/5 bg-white/30 dark:bg-transparent flex flex-col items-center justify-center">
+             <div className="mb-4 text-slate-300 dark:text-slate-600">
+               <SearchX size={48} strokeWidth={1.5} />
+             </div>
              <p className="text-slate-500 dark:text-slate-400 font-medium">No matches found for your criteria.</p>
              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting your filters or search term.</p>
            </div>
@@ -186,7 +188,7 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, curr
                   className="p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all opacity-100 md:opacity-0 group-hover:opacity-100 scale-90"
                   aria-label="Delete transaction"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={20} />
                 </button>
               </div>
             </GlassCard>

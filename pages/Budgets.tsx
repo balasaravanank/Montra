@@ -120,7 +120,7 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
         </div>
         {!isAdding && budgets.length > 0 && (
           <GlassButton onClick={() => setIsAdding(true)} className="font-bold">
-            <Plus size={18} />
+            <Plus size={20} />
             <span className="hidden md:inline">Set Budget</span>
             <span className="md:hidden">New</span>
           </GlassButton>
@@ -172,7 +172,7 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
           <div className="flex justify-between items-start mb-6">
             <div>
                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                 <TrendingUp size={20} className="text-indigo-500" />
+                 <TrendingUp size={24} className="text-indigo-500" />
                  Spending Trend
                </h3>
                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
@@ -229,10 +229,10 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
           <div className="relative mb-8">
             <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full" />
             <div className="relative bg-white dark:bg-slate-900 glass-panel p-8 rounded-[2.5rem] shadow-2xl animate-float">
-              <PiggyBank className="w-16 h-16 text-indigo-500" strokeWidth={1.5} />
+              <PiggyBank className="w-20 h-20 text-indigo-500" strokeWidth={1.5} />
             </div>
             <div className="absolute -top-2 -right-2 p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl shadow-lg animate-pulse">
-              <Sparkles size={20} />
+              <Sparkles size={24} />
             </div>
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">Your money, your rules.</h2>
@@ -257,7 +257,7 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
 
             let barGradient = 'from-emerald-400 to-emerald-600';
             let shadowColor = 'shadow-emerald-500/30';
-            let statusIcon = <CheckCircle2 size={12} />;
+            let statusIcon = <CheckCircle2 size={16} />;
             let statusText = 'On Track';
             let statusColor = 'text-emerald-600 dark:text-emerald-400';
             let statusBg = 'bg-emerald-50 dark:bg-emerald-500/10';
@@ -265,14 +265,14 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
             if (isOverLimit) {
               barGradient = 'from-red-500 to-rose-600';
               shadowColor = 'shadow-red-500/30';
-              statusIcon = <AlertTriangle size={12} />;
+              statusIcon = <AlertTriangle size={16} />;
               statusText = 'Exceeded';
               statusColor = 'text-red-600 dark:text-red-400';
               statusBg = 'bg-red-50 dark:bg-red-500/10';
             } else if (isNearLimit) {
               barGradient = 'from-amber-400 to-orange-500';
               shadowColor = 'shadow-orange-500/30';
-              statusIcon = <AlertTriangle size={12} />;
+              statusIcon = <AlertTriangle size={16} />;
               statusText = 'Near Limit';
               statusColor = 'text-amber-600 dark:text-amber-400';
               statusBg = 'bg-amber-50 dark:bg-amber-500/10';
@@ -284,7 +284,7 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
                  <div className="flex justify-between items-start mb-5">
                     <div className="flex items-center gap-3">
                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${CATEGORY_COLORS[budget.category]}`}>
-                          {React.cloneElement(CATEGORY_ICONS[budget.category] as React.ReactElement<any>, { size: 20 })}
+                          {React.cloneElement(CATEGORY_ICONS[budget.category] as React.ReactElement<any>, { size: 24 })}
                        </div>
                        <div>
                           <h4 className="font-bold text-lg text-slate-800 dark:text-white leading-tight">{budget.category}</h4>
@@ -292,8 +292,8 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
                        </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 dark:bg-slate-800/50 rounded-lg p-1 backdrop-blur-sm">
-                       <button onClick={() => startEdit(budget)} className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700"><Pencil size={14} /></button>
-                       <button onClick={() => onDeleteBudget(budget.category)} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700"><Trash2 size={14} /></button>
+                       <button onClick={() => startEdit(budget)} className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700"><Pencil size={18} /></button>
+                       <button onClick={() => onDeleteBudget(budget.category)} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-md hover:bg-white dark:hover:bg-slate-700"><Trash2 size={18} /></button>
                     </div>
                  </div>
 

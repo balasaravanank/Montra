@@ -1,3 +1,4 @@
+
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -19,28 +20,44 @@ import {
   Award,
   Apple,
   Car,
-  Sparkles
+  Sparkles,
+  Plane,
+  Laptop,
+  Guitar,
+  Shirt,
+  Smartphone,
+  Camera,
+  Bike,
+  Pizza,
+  Palmtree,
+  Trophy,
+  Watch,
+  Gem,
+  Dog,
+  Palette,
+  Tent,
+  Briefcase
 } from 'lucide-react';
 import React from 'react';
 import { Category } from './types';
 
 export const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
-  [Category.FOOD]: <Coffee className="w-4 h-4" />,
-  [Category.TRAVEL]: <Bus className="w-4 h-4" />,
-  [Category.RENT]: <Home className="w-4 h-4" />,
-  [Category.UTILITIES]: <Zap className="w-4 h-4" />,
-  [Category.SUBSCRIPTIONS]: <Tv className="w-4 h-4" />,
-  [Category.ENTERTAINMENT]: <Gamepad2 className="w-4 h-4" />,
-  [Category.ACADEMICS]: <GraduationCap className="w-4 h-4" />,
-  [Category.SHOPPING]: <ShoppingBag className="w-4 h-4" />,
-  [Category.GROCERIES]: <Apple className="w-4 h-4" />,
-  [Category.TRANSPORTATION]: <Car className="w-4 h-4" />,
-  [Category.PERSONAL_CARE]: <Sparkles className="w-4 h-4" />,
-  [Category.OTHER]: <MoreHorizontal className="w-4 h-4" />,
-  [Category.INCOME]: <DollarSign className="w-4 h-4" />,
-  [Category.INCOME_SOURCE]: <Wallet className="w-4 h-4" />,
-  [Category.SCHOLARSHIP]: <Award className="w-4 h-4" />,
-  [Category.GIFT]: <Gift className="w-4 h-4" />,
+  [Category.FOOD]: <Coffee className="w-5 h-5" />,
+  [Category.TRAVEL]: <Bus className="w-5 h-5" />,
+  [Category.RENT]: <Home className="w-5 h-5" />,
+  [Category.UTILITIES]: <Zap className="w-5 h-5" />,
+  [Category.SUBSCRIPTIONS]: <Tv className="w-5 h-5" />,
+  [Category.ENTERTAINMENT]: <Gamepad2 className="w-5 h-5" />,
+  [Category.ACADEMICS]: <GraduationCap className="w-5 h-5" />,
+  [Category.SHOPPING]: <ShoppingBag className="w-5 h-5" />,
+  [Category.GROCERIES]: <Apple className="w-5 h-5" />,
+  [Category.TRANSPORTATION]: <Car className="w-5 h-5" />,
+  [Category.PERSONAL_CARE]: <Sparkles className="w-5 h-5" />,
+  [Category.OTHER]: <MoreHorizontal className="w-5 h-5" />,
+  [Category.INCOME]: <DollarSign className="w-5 h-5" />,
+  [Category.INCOME_SOURCE]: <Wallet className="w-5 h-5" />,
+  [Category.SCHOLARSHIP]: <Award className="w-5 h-5" />,
+  [Category.GIFT]: <Gift className="w-5 h-5" />,
 };
 
 export const CATEGORY_COLORS: Record<Category, string> = {
@@ -69,3 +86,30 @@ export const NAV_ITEMS = [
   { id: 'goals', label: 'Goals', icon: Target },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
+
+// Mapping of Goal Icon Keys to Lucide Components
+export const GOAL_ICON_COMPONENTS: Record<string, React.ElementType> = {
+  'target': Target,
+  'travel': Plane,
+  'tech': Laptop,
+  'car': Car,
+  'home': Home,
+  'education': GraduationCap,
+  'music': Guitar,
+  'fashion': Shirt,
+  'phone': Smartphone,
+  'camera': Camera,
+  'bike': Bike,
+  'food': Pizza,
+  'gift': Gift,
+  'savings': PiggyBank,
+  'vacation': Palmtree,
+  'sport': Trophy,
+  'watch': Watch,
+  'game': Gamepad2,
+  'jewelry': Gem,
+  'pet': Dog,
+  'art': Palette,
+  'camping': Tent,
+  'work': Briefcase
+};

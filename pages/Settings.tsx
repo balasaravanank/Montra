@@ -50,7 +50,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
         {/* Profile Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <User size={16} />
+            <User size={20} />
             <h3 className="text-xs font-bold uppercase tracking-widest">Student Profile</h3>
           </div>
           <GlassCard className="space-y-4">
@@ -67,7 +67,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Full Name</label>
                 <div className="relative">
-                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
                    <GlassInput 
                     value={settings.profile.name} 
                     onChange={(e) => handleProfileChange('name', e.target.value)}
@@ -79,7 +79,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">University</label>
                 <div className="relative">
-                   <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+                   <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
                    <GlassInput 
                     value={settings.profile.school} 
                     onChange={(e) => handleProfileChange('school', e.target.value)}
@@ -92,7 +92,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
           </GlassCard>
 
           <div className="flex items-center gap-2 text-slate-400 mt-6 mb-2">
-            <Globe size={16} />
+            <Globe size={20} />
             <h3 className="text-xs font-bold uppercase tracking-widest">Localization</h3>
           </div>
           <GlassCard className="relative z-20">
@@ -120,7 +120,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
         {/* Preferences & Data Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <Palette size={16} />
+            <Palette size={20} />
             <h3 className="text-xs font-bold uppercase tracking-widest">Interface</h3>
           </div>
           <GlassCard className="space-y-6">
@@ -148,7 +148,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg transition-colors ${settings.isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-amber-100 text-amber-600'}`}>
-                  {settings.isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
+                  {settings.isDarkMode ? <Moon size={22} /> : <Sun size={22} />}
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-slate-800 dark:text-white">Dark Mode</h4>
@@ -167,7 +167,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
           </GlassCard>
 
           <div className="flex items-center gap-2 text-slate-400 mt-6 mb-2">
-            <Database size={16} />
+            <Database size={20} />
             <h3 className="text-xs font-bold uppercase tracking-widest">Data Management</h3>
           </div>
           <GlassCard className="space-y-4">
@@ -175,12 +175,12 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
               <div>
                 <h4 className="text-sm font-medium text-slate-800 dark:text-white">Cloud Backup</h4>
                 <p className="text-xs text-slate-500 flex items-center gap-1">
-                  <ShieldCheck size={12} className="text-emerald-500" />
+                  <ShieldCheck size={16} className="text-emerald-500" />
                   Local data is encrypted
                 </p>
               </div>
               <GlassButton variant="secondary" onClick={exportData}>
-                <Download size={16} />
+                <Download size={20} />
                 Export JSON
               </GlassButton>
             </div>
@@ -192,7 +192,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
                   <p className="text-xs text-slate-400">Permanently delete all data.</p>
                 </div>
                 <GlassButton variant="danger" onClick={() => setIsResetConfirm(true)}>
-                  <Trash2 size={16} />
+                  <Trash2 size={20} />
                   Reset App
                 </GlassButton>
               </div>
@@ -220,7 +220,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
           <div className="pt-6">
             <div className="flex items-center justify-center gap-4 text-slate-300 dark:text-slate-600">
                <div className="flex items-center gap-1.5 grayscale opacity-50">
-                 <Github size={14} />
+                 <Github size={16} />
                  <span className="text-[10px] font-bold uppercase tracking-wider">v1.2.0 Stable</span>
                </div>
                <div className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />

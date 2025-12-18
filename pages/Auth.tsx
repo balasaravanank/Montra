@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GlassCard, GlassButton, GlassInput } from '../components/ui/Glass';
-import { Mail, Lock, User, GraduationCap, ArrowRight, Github, Sparkles, ShieldCheck, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
+import { Mail, Lock, User, GraduationCap, ArrowRight, Sparkles, ShieldCheck, Eye, EyeOff, ShieldAlert, Check } from 'lucide-react';
 import { View } from '../types';
 
 interface Props {
@@ -120,10 +120,10 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
           <div className="relative inline-block mb-6">
             <div className="absolute inset-0 bg-indigo-500/30 blur-3xl rounded-full scale-150 animate-pulse" />
             <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-slate-900 dark:bg-indigo-600 text-white shadow-2xl transform hover:rotate-6 transition-transform duration-500 cursor-default">
-              <GraduationCap size={40} />
+              <GraduationCap size={48} />
             </div>
             <div className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 p-1.5 rounded-full shadow-lg border-2 border-white dark:border-slate-900">
-              <Sparkles size={14} fill="currentColor" />
+              <Sparkles size={20} fill="currentColor" />
             </div>
           </div>
           <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">Montra</h1>
@@ -139,7 +139,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
               <div className="relative mb-6">
                 <div className="w-16 h-16 border-4 border-slate-100 dark:border-white/10 border-t-indigo-600 rounded-full animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <ShieldCheck size={24} className="text-indigo-600 animate-pulse" />
+                  <ShieldCheck size={32} className="text-indigo-600 animate-pulse" />
                 </div>
               </div>
               <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest mb-1">Authenticating</h3>
@@ -173,7 +173,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                 <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] ml-1">Student Name</label>
                 <div className="relative group input-glow rounded-xl">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                    <User className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={22} />
                   </div>
                   <GlassInput 
                     type="text" 
@@ -191,7 +191,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
               <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] ml-1">University Email</label>
               <div className="relative group input-glow rounded-xl">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                  <Mail className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={22} />
                 </div>
                 <GlassInput 
                   type="email" 
@@ -213,7 +213,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
               </div>
               <div className="relative group input-glow rounded-xl">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                  <Lock className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={22} />
                 </div>
                 <GlassInput 
                   type={showPassword ? "text" : "password"} 
@@ -228,7 +228,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                 </button>
               </div>
               
@@ -237,7 +237,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                 <div className="animate-reveal px-1 space-y-1.5">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                      <ShieldAlert size={10} className={strength.score > 2 ? 'text-indigo-500' : 'text-amber-500'} />
+                      <ShieldAlert size={14} className={strength.score > 2 ? 'text-indigo-500' : 'text-amber-500'} />
                       Security Level
                     </span>
                     <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${strength.color} text-white transition-all duration-300`}>
@@ -265,7 +265,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                   onClick={() => setRememberMe(!rememberMe)}
                   className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${rememberMe ? 'bg-indigo-600 border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500' : 'bg-white/50 dark:bg-white/5 border-slate-300 dark:border-white/20'}`}
                 >
-                  {rememberMe && <Check size={10} className="text-white" strokeWidth={4} />}
+                  {rememberMe && <Check size={14} className="text-white" strokeWidth={4} />}
                 </button>
                 <label onClick={() => setRememberMe(!rememberMe)} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer select-none">
                   Remember me
@@ -276,7 +276,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
             <div className="pt-2 animate-reveal" style={{ animationDelay: '0.3s' }}>
               <GlassButton type="submit" className="w-full py-4 text-sm font-black bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/20 dark:shadow-none transform active:scale-[0.98] transition-all border-none group primary-button-shine">
                 {currentView === 'login' ? 'SIGN IN TO MONTRA' : 'CREATE STUDENT ACCOUNT'}
-                <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight size={22} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </GlassButton>
             </div>
           </form>
@@ -286,7 +286,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
             <div className="relative flex justify-center text-[9px] uppercase font-black"><span className="bg-white dark:bg-slate-900 px-4 text-slate-400 dark:text-slate-500 tracking-[0.3em]">OR</span></div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 animate-reveal" style={{ animationDelay: '0.5s' }}>
+          <div className="grid grid-cols-1 gap-4 animate-reveal" style={{ animationDelay: '0.5s' }}>
             <button 
               type="button" 
               className="group relative flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:shadow-lg text-slate-700 dark:text-slate-200 font-black text-[11px] active:scale-[0.97]"
@@ -299,16 +299,7 @@ export const Auth: React.FC<Props> = ({ onLogin, currentView, onSwitch }) => {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
               </div>
-              GOOGLE
-            </button>
-            <button 
-              type="button" 
-              className="group relative flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-white/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:shadow-lg text-slate-700 dark:text-slate-200 font-black text-[11px] active:scale-[0.97]"
-            >
-              <div className="flex items-center justify-center p-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm group-hover:scale-110 transition-transform">
-                <Github size={16} className="text-slate-900 dark:text-white" />
-              </div>
-              GITHUB
+              CONTINUE WITH GOOGLE
             </button>
           </div>
 

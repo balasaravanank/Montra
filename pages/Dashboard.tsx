@@ -1,11 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, LabelList } from 'recharts';
 import { Transaction, Category, Budget, SavingsGoal, UserProfile } from '../types';
 import { GlassCard, GlassButton } from '../components/ui/Glass';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
-import { getFinancialInsight } from '../services/geminiService';
-import { Sparkles, TrendingUp, TrendingDown, ArrowUpRight, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, Wallet } from 'lucide-react';
 
 interface Props {
   transactions: Transaction[];
@@ -39,7 +38,7 @@ const CustomTooltip = ({ active, payload, currency }: any) => {
               <div key={cat} className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-2">
                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center scale-75 ${CATEGORY_COLORS[cat]}`}>
-                    {React.cloneElement(CATEGORY_ICONS[cat] as React.ReactElement<any>, { size: 12 })}
+                    {React.cloneElement(CATEGORY_ICONS[cat] as React.ReactElement<any>, { size: 16 })}
                   </div>
                   <span className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">{cat}</span>
                 </div>
@@ -91,25 +90,12 @@ const CustomDataLabel = (props: any) => {
 };
 
 export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profile, onAddTransaction, currency, isDarkMode }) => {
-  const [insight, setInsight] = useState<string>('');
-  const [isLoadingInsight, setIsLoadingInsight] = useState(false);
   const [hoveredData, setHoveredData] = useState<any>(null);
 
   // Define dynamic colors based on theme
   const chartColor = isDarkMode ? '#818cf8' : '#6366f1'; // Indigo 400 for dark, Indigo 500 for light
   const axisColor = isDarkMode ? '#94a3b8' : '#94a3b8'; // Slate 400 works well for both, but could use #64748b (slate 500) for light
   const dotStrokeColor = isDarkMode ? '#0f172a' : '#fff'; // Slate 900 (bg) for dark mode cutout effect, White for light
-
-  useEffect(() => {
-    if (transactions.length > 0) {
-      setIsLoadingInsight(true);
-      // Pass the full context to Gemini
-      getFinancialInsight(transactions, budgets, goals, profile)
-        .then(setInsight)
-        .catch(() => setInsight("Could not load insight."))
-        .finally(() => setIsLoadingInsight(false));
-    }
-  }, [transactions, budgets, goals, profile]);
 
   const income = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
   const expenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
@@ -172,25 +158,9 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
         </GlassButton>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl p-[1px] bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 dark:from-indigo-900/50 dark:via-purple-900/50 dark:to-pink-900/50">
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 relative">
-           <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
-             <Sparkles className="w-4 h-4 text-white" />
-           </div>
-           <div>
-             <h3 className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 uppercase tracking-wider mb-1">
-               Montra AI Insight
-             </h3>
-             <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-               {isLoadingInsight ? <span className="animate-pulse">Analyzing spending habits...</span> : insight || "Add data for insights!"}
-             </p>
-           </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <GlassCard hoverEffect className="relative overflow-hidden group">
-          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 dark:text-white transition-opacity"><Wallet size={80} /></div>
+          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 dark:text-white transition-opacity"><Wallet size={96} /></div>
           {/* Subtle Glow for Total Balance */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
           
@@ -203,7 +173,7 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
 
         <GlassCard hoverEffect className="relative overflow-hidden group">
            <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 text-emerald-500 transition-opacity">
-             <TrendingUp size={80} />
+             <TrendingUp size={96} />
            </div>
            {/* Emerald Glow for Income */}
            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
@@ -214,7 +184,7 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
 
         <GlassCard hoverEffect className="relative overflow-hidden group">
            <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 text-red-500 transition-opacity">
-             <TrendingDown size={80} />
+             <TrendingDown size={96} />
            </div>
            {/* Red Glow for Expenses */}
            <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
@@ -262,7 +232,7 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${CATEGORY_COLORS[cat as Category]}`}>
-                        {React.cloneElement(CATEGORY_ICONS[cat as Category] as React.ReactElement<any>, { size: 14 })}
+                        {React.cloneElement(CATEGORY_ICONS[cat as Category] as React.ReactElement<any>, { size: 20 })}
                       </div>
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{cat}</span>
                     </div>

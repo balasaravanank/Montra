@@ -213,7 +213,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
               {/* Toast Notification Banner at Top */}
               <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full px-6 z-30 pointer-events-none">
                 <div className="bg-slate-900 dark:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-xl flex items-center justify-center gap-2 animate-toast-in border border-slate-800 dark:border-indigo-500/50">
-                  <BellRing size={14} className="text-indigo-400 dark:text-white" />
+                  <BellRing size={16} className="text-indigo-400 dark:text-white" />
                   <span className="text-xs font-bold uppercase tracking-wider">Transaction Saved!</span>
                 </div>
               </div>
@@ -240,7 +240,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
               {/* Floating XP Indicator */}
               <div className="absolute top-1/2 left-1/2 pointer-events-none z-20">
                  <div className="animate-float-up-fade text-indigo-600 dark:text-indigo-400 font-bold text-xl drop-shadow-md flex items-center gap-2 whitespace-nowrap bg-white/95 dark:bg-slate-800/95 px-4 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-500/20 shadow-xl">
-                   <SparklesIcon size={18} className="text-amber-400" fill="currentColor" />
+                   <SparklesIcon size={24} className="text-amber-400" fill="currentColor" />
                    +15 Student XP
                  </div>
               </div>
@@ -251,10 +251,10 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                 
                 <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
                 <div className="relative bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-7 rounded-full shadow-2xl shadow-indigo-200 dark:shadow-none animate-coin-spin-3d">
-                  <Coins size={52} />
+                  <Coins size={64} />
                 </div>
                 <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg animate-bounce ring-4 ring-white dark:ring-slate-900">
-                  <CheckCircle2 size={24} />
+                  <CheckCircle2 size={32} />
                 </div>
               </div>
               
@@ -264,7 +264,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                   <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                     {type === 'expense' 
                       ? "Wise tracking habits detected." 
-                      : "Your future self is high-fiving you! 💰"}
+                      : "Your future self is high-fiving you!"}
                   </p>
                 </div>
 
@@ -272,7 +272,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                 <div className="space-y-2.5 bg-slate-50/50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5">
                   <div className="flex justify-between items-center text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     <span className="flex items-center gap-1.5">
-                      <SparklesIcon size={12} className="text-indigo-400 dark:text-indigo-400" />
+                      <SparklesIcon size={16} className="text-indigo-400 dark:text-indigo-400" />
                       Lvl 4 Scholar
                     </span>
                     <span className="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md transition-all duration-300">
@@ -299,12 +299,12 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2.5 bg-slate-100/80 dark:bg-white/5 rounded-xl">
-                    <Receipt className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                    <Receipt className="w-6 h-6 text-slate-600 dark:text-slate-400" />
                   </div>
                   <h2 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">New Transaction</h2>
                 </div>
                 <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 transition-colors">
-                  <X size={20} />
+                  <X size={24} />
                 </button>
               </div>
 
@@ -354,7 +354,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                      <div 
                         className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors z-10 pointer-events-none"
                      >
-                       <Calendar size={18} />
+                       <Calendar size={22} />
                      </div>
                      <GlassInput 
                        ref={dateInputRef}

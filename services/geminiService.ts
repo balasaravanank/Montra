@@ -85,6 +85,6 @@ export const getFinancialInsight = async (
     return response.text || "Keep tracking to see more insights!";
   } catch (error) {
     console.error("Gemini Insight Error:", error);
-    return "Brainstorming new money moves for you... check back later! 🌟";
+    return "Brainstorming new money moves for you... check back later!";
   }
 };
