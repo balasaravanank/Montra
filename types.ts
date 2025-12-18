@@ -1,0 +1,66 @@
+
+export type TransactionType = 'income' | 'expense';
+
+export enum Category {
+  FOOD = 'Food',
+  TRAVEL = 'Travel',
+  RENT = 'Rent',
+  UTILITIES = 'Utilities',
+  SUBSCRIPTIONS = 'Subscriptions',
+  ENTERTAINMENT = 'Entertainment',
+  ACADEMICS = 'Academics',
+  SHOPPING = 'Shopping',
+  GROCERIES = 'Groceries',
+  TRANSPORTATION = 'Transportation',
+  PERSONAL_CARE = 'Personal Care',
+  OTHER = 'Other',
+  INCOME = 'Income',
+  INCOME_SOURCE = 'Income Source',
+  SCHOLARSHIP = 'Scholarship',
+  GIFT = 'Gift'
+}
+
+export interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  category: Category;
+  date: string;
+  type: TransactionType;
+  source?: string;
+}
+
+export interface Budget {
+  category: Category;
+  limit: number;
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  icon: string;
+}
+
+export interface UserProfile {
+  name: string;
+  school: string;
+  year: string;
+}
+
+export interface UserSettings {
+  currency: string;
+  theme: 'vibrant' | 'minimalist';
+  isDarkMode: boolean;
+  profile: UserProfile;
+}
+
+export interface AppState {
+  transactions: Transaction[];
+  budgets: Budget[];
+  goals: SavingsGoal[];
+  settings: UserSettings;
+}
+
+export type View = 'dashboard' | 'transactions' | 'budgets' | 'goals' | 'settings' | 'login' | 'signup';
