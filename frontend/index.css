@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Body Styles from index.html migrated here if needed, 
+   but tailwind.config.js handles most theme extensions. 
+   We keep the specific body backgrounds here if they aren't tailwind classes */
+
+body {
+  background: #fdfdfd;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(220, 220, 250, 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(250, 220, 220, 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(220, 250, 220, 0.3) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(240, 240, 250, 0.3) 0px, transparent 50%);
+  background-attachment: fixed;
+  transition: background-color 0.5s ease;
+}
+
+.dark body {
+  background: #0d0b16;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(60, 40, 100, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(80, 50, 130, 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(50, 30, 90, 0.4) 0px, transparent 50%);
+}
+
+/* Glass Panel Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.dark .glass-panel {
+  background: rgba(20, 16, 35, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.dark .liquid-glass {
+  background: rgba(17, 25, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+input[type="date"] {
+  position: relative;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+}
+
+* {
+  transition: color 0.2s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
