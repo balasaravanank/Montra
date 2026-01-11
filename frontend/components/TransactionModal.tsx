@@ -9,9 +9,10 @@ interface Props {
   onClose: () => void;
   onSave: (t: Omit<Transaction, 'id'>) => void;
   currency: string;
+  initialType?: TransactionType;
 }
 
-export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, currency }) => {
+export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, currency, initialType = 'expense' }) => {
   // Helper to get local date string YYYY-MM-DD
   const getTodayString = () => {
     const d = new Date();
@@ -35,7 +36,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(getTodayString());
   const [source, setSource] = useState('');
-  const [type, setType] = useState<TransactionType>('expense');
+  const [type, setType] = useState<TransactionType>(initialType);
   const [category, setCategory] = useState<Category | string>(Category.FOOD);
   const [customCategory, setCustomCategory] = useState('');
   const [isCustomCategoryMode, setIsCustomCategoryMode] = useState(false);
@@ -48,6 +49,17 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
   useEffect(() => {
     if (isOpen) {
+      // Set type from prop when opening
+      if (initialType) {
+        setType(initialType);
+        // Reset category based on type
+        if (initialType === 'income') {
+          setCategory(Category.INCOME);
+        } else {
+          setCategory(Category.FOOD);
+        }
+      }
+
       // Always reset date to today when opening a new blank transaction
       if (!description && !amount) {
         setDate(getTodayString());
@@ -55,7 +67,8 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
         setCustomCategory('');
       }
     }
-  }, [isOpen, description, amount]);
+  }, [isOpen, initialType]); // added initialType dependency, removed description/amount dependency to avoid reset during editing, but kept logic inside for open check
+
 
   useEffect(() => {
     if (isSuccess) {
@@ -426,9 +439,9 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                       <GlassSelect
                         value={category}
                         onChange={(e) => {
-                          if (e.target.value === 'CUSTOM_NEW') {
+                          if (e.target.value === 'CUSTOM_NEW' || e.target.value === Category.OTHER) {
                             setIsCustomCategoryMode(true);
-                            setCustomCategory('');
+                            setCustomCategory(e.target.value === Category.OTHER ? 'Other' : '');
                           } else {
                             setCategory(e.target.value as Category);
                           }
@@ -441,7 +454,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                         }).map((cat) => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
-                        <option value="CUSTOM_NEW" className="font-bold text-indigo-600 dark:text-indigo-400">+ Add New Category</option>
+                        <option value="CUSTOM_NEW" className="font-bold text-indigo-600 dark:text-indigo-400">Custom Category...</option>
                       </GlassSelect>
                     )}
                   </div>

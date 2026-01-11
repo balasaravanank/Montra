@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import plugin from 'tailwindcss/plugin';
+
 export default {
   content: [
     "./index.html",
@@ -7,27 +9,45 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
-      transitionTimingFunction: {
-        'ios': 'cubic-bezier(0.32, 0.72, 0, 1)',
-        'ios-spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        sans: ['"General Sans"', 'sans-serif'],
       },
       colors: {
+        // Mapping indigo to the new Primary Blue #1A62EE for consistent usage
+        indigo: {
+          50: '#F0F6FF',
+          100: '#E0E9FE',
+          200: '#C0D4FC',
+          300: '#90B4FA',
+          400: '#6090F6',
+          500: '#3A6FF2',
+          600: '#1A62EE', // The requested Primary Blue
+          700: '#1049CC',
+          800: '#0E3B9E',
+          900: '#0B3076',
+          950: '#061D4C',
+        },
         glass: {
           100: 'rgba(255, 255, 255, 0.1)',
           200: 'rgba(255, 255, 255, 0.2)',
           300: 'rgba(255, 255, 255, 0.3)',
           border: 'rgba(255, 255, 255, 0.2)',
           surface: 'rgba(255, 255, 255, 0.65)',
-        }
+        },
       },
+      transitionTimingFunction: {
+        'ios': 'cubic-bezier(0.32, 0.72, 0, 1)',
+        'ios-spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      },
+
       animation: {
         'float': 'float 6s ease-in-out infinite',
         'fade-in': 'fadeIn 0.5s ease-ios forwards',
         'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'page-enter': 'pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'element': 'fadeSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'slide-right': 'slideRightIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'testimonial': 'testimonialIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
         float: {
@@ -54,5 +74,23 @@ export default {
     },
   },
   darkMode: 'class',
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      const delays = {
+        '.animate-delay-100': { 'animation-delay': '100ms' },
+        '.animate-delay-200': { 'animation-delay': '200ms' },
+        '.animate-delay-300': { 'animation-delay': '300ms' },
+        '.animate-delay-400': { 'animation-delay': '400ms' },
+        '.animate-delay-500': { 'animation-delay': '500ms' },
+        '.animate-delay-600': { 'animation-delay': '600ms' },
+        '.animate-delay-700': { 'animation-delay': '700ms' },
+        '.animate-delay-800': { 'animation-delay': '800ms' },
+        '.animate-delay-900': { 'animation-delay': '900ms' },
+        '.animate-delay-1000': { 'animation-delay': '1000ms' },
+        '.animate-delay-1200': { 'animation-delay': '1200ms' },
+        '.animate-delay-1400': { 'animation-delay': '1400ms' },
+      };
+      addUtilities(delays);
+    }),
+  ],
 }
-

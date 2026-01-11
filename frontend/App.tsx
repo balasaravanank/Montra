@@ -1,19 +1,14 @@
-
+// ... imports ...
 import React, { useState, useEffect } from 'react';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-import { View, Transaction, Category, Budget, SavingsGoal, UserSettings } from './types';
+
+import { View, Transaction, TransactionType, Category, Budget, SavingsGoal, UserSettings } from './types';
 import { NAV_ITEMS } from './constants';
-import { Dashboard } from './pages/Dashboard';
-import { TransactionsList } from './pages/TransactionsList';
-import { Budgets } from './pages/Budgets';
-import { Goals } from './pages/Goals';
-import { Settings } from './pages/Settings';
-import { Auth } from './pages/Auth';
+
 import { TransactionModal } from './components/TransactionModal';
-import { GlassCard } from './components/ui/Glass';
-import { Plus, LogOut, Cloud, Loader2 } from 'lucide-react';
+import { TopNavbar } from './components/TopNavbar';
+import { Plus, Loader2 } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import {
   subscribeToTransactions,
   subscribeToSettings,
@@ -29,6 +24,16 @@ import {
   saveUserSettings,
   deleteAllUserData
 } from './services/firestoreService';
+
+// Lazy load pages
+const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
+const TransactionsList = React.lazy(() => import('./pages/TransactionsList').then(module => ({ default: module.TransactionsList })));
+const Budgets = React.lazy(() => import('./pages/Budgets').then(module => ({ default: module.Budgets })));
+const Goals = React.lazy(() => import('./pages/Goals').then(module => ({ default: module.Goals })));
+const Settings = React.lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
+const Auth = React.lazy(() => import('./pages/Auth').then(module => ({ default: module.Auth })));
+
+
 
 const DEFAULT_SETTINGS: UserSettings = {
   currency: '$',
@@ -47,6 +52,7 @@ const AppContent = () => {
 
   const [currentView, setCurrentView] = useState<View>('login');
   const [isModalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<TransactionType>('expense');
   const [dataLoading, setDataLoading] = useState(true);
 
   // State for data
@@ -63,7 +69,12 @@ const AppContent = () => {
       return;
     }
 
-    setCurrentView('dashboard');
+    // Only set view to dashboard if we are currently in login/signup state, to preserve view on reload if possible (though simple state reset here)
+    // Actually, simplifying: defaulting to dashboard on fresh auth load is standard.
+    if (currentView === 'login' || currentView === 'signup') {
+      setCurrentView('dashboard');
+    }
+
     setDataLoading(true);
 
     // Subscribe to real-time updates
@@ -229,7 +240,10 @@ const AppContent = () => {
             budgets={budgets}
             goals={goals}
             profile={settings.profile}
-            onAddTransaction={() => setModalOpen(true)}
+            onAddTransaction={(type) => {
+              setModalType(type);
+              setModalOpen(true);
+            }}
             currency={settings.currency}
             isDarkMode={settings.isDarkMode}
           />
@@ -262,6 +276,7 @@ const AppContent = () => {
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onResetData={resetData}
+            onLogout={handleLogout}
             transactions={transactions}
           />
         );
@@ -283,96 +298,16 @@ const AppContent = () => {
   const showNav = user && currentView !== 'login' && currentView !== 'signup';
 
   return (
-    <div className={`flex h-screen w-full overflow-hidden transition-colors duration-500 ${settings.isDarkMode ? 'dark' : 'bg-slate-50/50'} ${settings.theme === 'vibrant' ? 'vibrant-mode' : ''}`}>
+    <div className={`flex flex-col h-screen w-full overflow-hidden transition-colors duration-500 ${settings.isDarkMode ? 'dark' : 'bg-slate-50/50'} ${settings.theme === 'vibrant' ? 'vibrant-mode' : ''}`}>
 
-      {/* Desktop Sidebar (Hidden on Mobile) */}
+      {/* Top Navbar (Desktop) */}
       {showNav && (
-        <aside
-          className="
-            hidden md:flex
-            fixed left-0 top-0 bottom-0 z-50 
-            flex-col 
-            glass-panel border-r border-white/40 dark:border-white/5 
-            transition-all duration-500 ease-ios transform-gpu
-            overflow-hidden group
-            shadow-[0_0_40px_-10px_rgba(0,0,0,0.1)] hover:shadow-[0_0_50px_-5px_rgba(79,70,229,0.15)]
-            backdrop-blur-2xl saturate-150
-            md:translate-x-0 md:w-20 md:hover:w-72
-          "
-        >
-          {/* Header / Logo */}
-          <div className="h-24 flex items-center px-5 relative shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow-lg shadow-indigo-500/20 z-10 shrink-0 transform transition-transform duration-300 hover:scale-110 hover:rotate-3">
-                M
-              </div>
-              <div className="md:absolute md:left-20 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-75 md:transform md:translate-x-4 md:group-hover:translate-x-0 whitespace-nowrap">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Montra</h1>
-                <p className="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Student Finance</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="flex-1 px-3 space-y-2 py-4">
-            {NAV_ITEMS.map((item) => {
-              const isActive = currentView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id as View)}
-                  className={`w-full flex items-center h-12 rounded-xl transition-all duration-300 ease-ios relative group/item overflow-hidden active:scale-95 ${isActive
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-indigo-500/20'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/10'
-                    }`}
-                >
-                  <div className="w-14 flex items-center justify-center shrink-0">
-                    <item.icon size={24} className={`transition-transform duration-300 ease-ios ${isActive ? '' : 'group-hover/item:scale-110'}`} />
-                  </div>
-                  <span className={`whitespace-nowrap font-medium text-sm transition-all duration-300 ease-ios absolute left-14 md:opacity-0 md:group-hover:opacity-100 md:transform md:translate-x-4 md:group-hover:translate-x-0 md:delay-75`}>
-                    {item.label}
-                  </span>
-                </button>
-              )
-            })}
-          </nav>
-
-          {/* Footer Actions */}
-          <div className="p-3 space-y-2 shrink-0 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-slate-900/50 dark:via-slate-900/20">
-            {/* Cloud Indicator */}
-            <div className="w-full md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
-              <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-                <Cloud size={16} className="text-indigo-500" />
-                Cloud Synced
-              </div>
-            </div>
-
-            {/* Pro Tip Card */}
-            <div className="w-full md:h-0 md:group-hover:h-auto overflow-hidden md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-100 ease-ios">
-              <GlassCard className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-4 mb-2 shadow-lg shadow-indigo-500/20">
-                <div className="flex items-start gap-3">
-                  <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                    <Plus size={18} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-white mb-0.5">Quick Tip</p>
-                    <p className="text-[10px] leading-relaxed opacity-90 text-white/80">Log expenses daily to boost your streak!</p>
-                  </div>
-                </div>
-              </GlassCard>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center h-12 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 ease-ios whitespace-nowrap overflow-hidden relative active:scale-95"
-            >
-              <div className="w-14 flex items-center justify-center shrink-0">
-                <LogOut size={24} />
-              </div>
-              <span className="absolute left-14 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 ease-ios">Sign Out</span>
-            </button>
-          </div>
-        </aside>
+        <TopNavbar
+          currentView={currentView}
+          onNavClick={handleNavClick}
+          onLogout={handleLogout}
+          profile={settings.profile}
+        />
       )}
 
       {/* Main Content Wrapper */}
@@ -380,15 +315,21 @@ const AppContent = () => {
         className={`
           flex-1 h-full overflow-hidden relative 
           transition-all duration-500 ease-ios transform-gpu
-          ${showNav ? 'md:ml-20' : ''}
         `}
       >
 
-        <div className="h-full overflow-y-auto px-4 pt-6 pb-48 md:p-8 custom-scrollbar">
-          <div className="max-w-6xl mx-auto">
+        {/* Content Container with Top Padding for Navbar */}
+        <div className={`h-full overflow-y-auto px-4 pb-48 md:px-8 md:pb-8 custom-scrollbar ${showNav ? 'pt-24 md:pt-28' : 'pt-6 md:pt-8'}`}>
+          <div className="max-w-7xl mx-auto">
             {/* Keyed container for page transitions */}
             <div key={currentView} className="animate-page-enter">
-              {renderView()}
+              <React.Suspense fallback={
+                <div className="flex h-[50vh] w-full items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                </div>
+              }>
+                {renderView()}
+              </React.Suspense>
             </div>
           </div>
         </div>
@@ -440,6 +381,7 @@ const AppContent = () => {
         onClose={() => setModalOpen(false)}
         onSave={addTransaction}
         currency={settings.currency}
+        initialType={modalType}
       />
     </div>
   );
@@ -449,9 +391,9 @@ const AppContent = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <AppContent />
-      <Analytics />
-      <SpeedInsights />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </AuthProvider>
   );
 };

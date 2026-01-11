@@ -21,6 +21,13 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const analytics = getAnalytics(app);
+
+let analyticsInstance = null;
+try {
+    analyticsInstance = getAnalytics(app);
+} catch (error) {
+    console.warn("Firebase Analytics disabled: Likely blocked by an ad-blocker.");
+}
+export const analytics = analyticsInstance;
 
 export default app;

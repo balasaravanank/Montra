@@ -57,23 +57,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // Initialize user document and migrate local data when user signs in
             if (firebaseUser) {
-                try {
-                    // Initialize user document in Firestore (creates if doesn't exist)
-                    await initializeUserDocument(
-                        firebaseUser.uid,
-                        firebaseUser.email || '',
-                        firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-                        DEFAULT_SETTINGS
-                    );
-
-                    // Migrate local data to Firestore
-                    const migrated = await migrateLocalDataToFirestore(firebaseUser.uid);
-                    if (migrated) {
-                        console.log('Local data migrated to Firestore');
-                    }
-                } catch (err) {
+                // Execute initialization in background so we don't block the UI loading state
+                initializeUserDocument(
+                    firebaseUser.uid,
+                    firebaseUser.email || '',
+                    firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                    DEFAULT_SETTINGS
+                ).catch(err => {
                     console.error('User initialization error:', err);
-                }
+                });
+
+                // Migration is currently disabled in service but keeping the structure
+                migrateLocalDataToFirestore(firebaseUser.uid).then(migrated => {
+                    if (migrated) console.log('Local data migrated to Firestore');
+                }).catch(console.error);
             }
 
             setLoading(false);

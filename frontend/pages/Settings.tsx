@@ -1,17 +1,18 @@
-
 import React, { useState } from 'react';
 import { UserSettings } from '../types';
-import { GlassCard, GlassButton, GlassInput, GlassSelect } from '../components/ui/Glass';
-import { User, Globe, Palette, Database, Download, Trash2, ShieldCheck, Github, Moon, Sun, GraduationCap } from 'lucide-react';
+import { GlassInput, GlassSelect } from '../components/ui/Glass';
+import { Download, Trash2, Moon, Sun, Laptop, LogOut, ChevronRight } from 'lucide-react';
+import { MagicBentoGrid, MagicBentoCard } from '../components/MagicBento';
 
 interface Props {
   settings: UserSettings;
   onUpdateSettings: (settings: UserSettings) => void;
   onResetData: () => void;
+  onLogout: () => void;
   transactions: any[];
 }
 
-export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetData, transactions }) => {
+export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetData, onLogout, transactions }) => {
   const [isResetConfirm, setIsResetConfirm] = useState(false);
 
   const handleProfileChange = (key: string, value: string) => {
@@ -23,7 +24,7 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
 
   const exportData = () => {
     const dataStr = JSON.stringify({ transactions, settings }, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     const exportFileDefaultName = `montra_backup_${new Date().toISOString().split('T')[0]}.json`;
 
     const linkElement = document.createElement('a');
@@ -40,195 +41,216 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-24 md:pb-0">
-      <header>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Personalize your Montra experience.</p>
+    <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-0">
+      <header className="mb-4 pl-2">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Settings</h1>
+        <p className="text-slate-500 dark:text-slate-400">Manage your workspace and preferences.</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Profile Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <User size={20} />
-            <h3 className="text-xs font-bold uppercase tracking-widest">Student Profile</h3>
-          </div>
-          <GlassCard className="space-y-4">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20">
+      <MagicBentoGrid enableSpotlight={false}>
+
+        {/* Profile Card (Large) */}
+        <MagicBentoCard
+          title="User Profile"
+          colSpan={2}
+          rowSpan={2}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm"
+        >
+          <div className="flex flex-col gap-6 mt-4 relative z-10">
+            <div className="flex items-center gap-5">
+              <div className="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-white text-3xl font-bold shadow-sm ring-4 ring-white dark:ring-white/5">
                 {settings.profile.name ? settings.profile.name.charAt(0).toUpperCase() : 'S'}
               </div>
               <div>
-                <h4 className="font-semibold text-slate-800 dark:text-white">{settings.profile.name || 'Student'}</h4>
-                <p className="text-xs text-slate-400">{settings.profile.school || 'University Not Set'}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Full Name</label>
-                <div className="relative">
-                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                   <GlassInput 
-                    value={settings.profile.name} 
-                    onChange={(e) => handleProfileChange('name', e.target.value)}
-                    placeholder="Your name"
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">University</label>
-                <div className="relative">
-                   <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                   <GlassInput 
-                    value={settings.profile.school} 
-                    onChange={(e) => handleProfileChange('school', e.target.value)}
-                    placeholder="e.g. Stanford"
-                    className="pl-10"
-                   />
-                </div>
-              </div>
-            </div>
-          </GlassCard>
-
-          <div className="flex items-center gap-2 text-slate-400 mt-6 mb-2">
-            <Globe size={20} />
-            <h3 className="text-xs font-bold uppercase tracking-widest">Localization</h3>
-          </div>
-          <GlassCard className="relative z-20">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-slate-800 dark:text-white">Primary Currency</h4>
-                <p className="text-xs text-slate-400">Used for all calculations and displays.</p>
-              </div>
-              <div className="w-32">
-                <GlassSelect 
-                  value={settings.currency} 
-                  onChange={(e) => onUpdateSettings({...settings, currency: e.target.value})}
-                >
-                  <option value="$">USD ($)</option>
-                  <option value="€">EUR (€)</option>
-                  <option value="£">GBP (£)</option>
-                  <option value="¥">JPY (¥)</option>
-                  <option value="₹">INR (₹)</option>
-                </GlassSelect>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-
-        {/* Preferences & Data Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <Palette size={20} />
-            <h3 className="text-xs font-bold uppercase tracking-widest">Interface</h3>
-          </div>
-          <GlassCard className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-medium text-slate-800 dark:text-white">Visual Style</h4>
-                <p className="text-xs text-slate-400">Adjust the transparency effects.</p>
-              </div>
-              <div className="flex p-1 bg-slate-100 dark:bg-white/5 rounded-lg transition-colors">
-                <button 
-                  onClick={() => onUpdateSettings({...settings, theme: 'minimalist'})}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${settings.theme === 'minimalist' ? 'bg-white dark:bg-white/20 shadow-sm text-slate-800 dark:text-white' : 'text-slate-400'}`}
-                >
-                  Minimal
-                </button>
-                <button 
-                  onClick={() => onUpdateSettings({...settings, theme: 'vibrant'})}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${settings.theme === 'vibrant' ? 'bg-white dark:bg-white/20 shadow-sm text-slate-800 dark:text-white' : 'text-slate-400'}`}
-                >
-                  Vibrant
-                </button>
+                <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{settings.profile.name || 'Student'}</h4>
+                <p className="text-slate-500 dark:text-slate-400">{settings.profile.school || 'University Not Set'}</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg transition-colors ${settings.isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-amber-100 text-amber-600'}`}>
-                  {settings.isDarkMode ? <Moon size={22} /> : <Sun size={22} />}
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-slate-800 dark:text-white">Dark Mode</h4>
-                  <p className="text-xs text-slate-400">Easier on your eyes at night.</p>
-                </div>
-              </div>
-              <button 
-                onClick={toggleDarkMode}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${settings.isDarkMode ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-              >
-                <span 
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
+            <div className="space-y-4 bg-slate-50 dark:bg-white/5 p-4 rounded-xl border border-slate-200 dark:border-white/5">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 ml-1">Display Name</label>
+                <GlassInput
+                  value={settings.profile.name}
+                  onChange={(e) => handleProfileChange('name', e.target.value)}
+                  placeholder="Your name"
                 />
-              </button>
-            </div>
-          </GlassCard>
-
-          <div className="flex items-center gap-2 text-slate-400 mt-6 mb-2">
-            <Database size={20} />
-            <h3 className="text-xs font-bold uppercase tracking-widest">Data Management</h3>
-          </div>
-          <GlassCard className="space-y-4">
-            <div className="flex items-center justify-between">
+              </div>
               <div>
-                <h4 className="text-sm font-medium text-slate-800 dark:text-white">Cloud Backup</h4>
-                <p className="text-xs text-slate-500 flex items-center gap-1">
-                  <ShieldCheck size={16} className="text-emerald-500" />
-                  Local data is encrypted
-                </p>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 ml-1">University / School</label>
+                <GlassInput
+                  value={settings.profile.school}
+                  onChange={(e) => handleProfileChange('school', e.target.value)}
+                  placeholder="e.g. Stanford University"
+                />
               </div>
-              <GlassButton variant="secondary" onClick={exportData}>
-                <Download size={20} />
-                Export JSON
-              </GlassButton>
             </div>
-            <hr className="border-slate-100 dark:border-white/5" />
-            {!isResetConfirm ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-red-600 dark:text-red-400">Danger Zone</h4>
-                  <p className="text-xs text-slate-400">Permanently delete all data.</p>
+          </div>
+        </MagicBentoCard>
+
+        {/* Appearance Card */}
+        <MagicBentoCard
+          title="Appearance"
+          colSpan={1}
+          rowSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm"
+        >
+          <div className="space-y-3 mt-4">
+            <button
+              onClick={toggleDarkMode}
+              className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all group border border-slate-200 dark:border-white/5"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg transition-colors ${settings.isDarkMode ? 'bg-indigo-500/20 text-indigo-300' : 'bg-amber-100 text-amber-600'}`}>
+                  {settings.isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
                 </div>
-                <GlassButton variant="danger" onClick={() => setIsResetConfirm(true)}>
-                  <Trash2 size={20} />
-                  Reset App
-                </GlassButton>
+                <span className="text-sm font-medium text-slate-700 dark:text-white/90">Dark Mode</span>
               </div>
+              <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${settings.isDarkMode ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${settings.isDarkMode ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+            </button>
+
+            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all border border-slate-200 dark:border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-200 dark:bg-white/5 text-slate-500 dark:text-white/70">
+                  <Laptop size={18} />
+                </div>
+                <span className="text-sm font-medium text-slate-700 dark:text-white/90">Style</span>
+              </div>
+              <div className="flex bg-slate-200 dark:bg-black/40 p-1 rounded-lg">
+                <button
+                  onClick={() => onUpdateSettings({ ...settings, theme: 'minimalist' })}
+                  className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${settings.theme === 'minimalist' ? 'bg-white dark:bg-white/20 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/60'}`}
+                >
+                  Mini
+                </button>
+                <button
+                  onClick={() => onUpdateSettings({ ...settings, theme: 'vibrant' })}
+                  className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-all ${settings.theme === 'vibrant' ? 'bg-white dark:bg-white/20 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/60'}`}
+                >
+                  Vib
+                </button>
+              </div>
+            </div>
+          </div>
+        </MagicBentoCard>
+
+        {/* Regional & Currency */}
+        <MagicBentoCard
+          title="Regional"
+          colSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm z-10"
+        >
+          <div className="mt-4 flex flex-col justify-center h-4/5">
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl font-bold font-mono">
+                  {settings.currency}
+                </div>
+                <div>
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Currency</div>
+                  <div className="text-sm text-slate-500 dark:text-white/50">Primary</div>
+                </div>
+              </div>
+              <GlassSelect
+                value={settings.currency}
+                onChange={(e) => onUpdateSettings({ ...settings, currency: e.target.value })}
+                className="min-w-[120px]"
+              >
+                <option value="$">USD ($)</option>
+                <option value="€">EUR (€)</option>
+                <option value="£">GBP (£)</option>
+                <option value="¥">JPY (¥)</option>
+                <option value="₹">INR (₹)</option>
+              </GlassSelect>
+            </div>
+          </div>
+        </MagicBentoCard>
+
+        {/* Data & Security */}
+        <MagicBentoCard
+          title="Data Control"
+          colSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="relative overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm"
+        >
+          <div className="mt-4 space-y-3 z-10 relative">
+            <button onClick={exportData} className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/20 rounded-xl text-blue-600 dark:text-blue-300 transition-all group">
+              <div className="flex items-center gap-3">
+                <Download size={18} />
+                <span className="text-sm font-bold">Export Data</span>
+              </div>
+              <ChevronRight size={16} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+            </button>
+
+            {!isResetConfirm ? (
+              <button onClick={() => setIsResetConfirm(true)} className="w-full flex items-center justify-between p-3 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-300 transition-all group">
+                <div className="flex items-center gap-3">
+                  <Trash2 size={18} />
+                  <span className="text-sm font-bold">Reset Data</span>
+                </div>
+                <ChevronRight size={16} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+              </button>
             ) : (
-              <div className="bg-red-50/50 dark:bg-red-950/20 p-4 rounded-xl border border-red-100 dark:border-red-900/30 animate-slide-up">
-                <p className="text-xs font-bold text-red-600 dark:text-red-400 mb-3">Are you absolutely sure? This cannot be undone.</p>
+              <div className="p-3 bg-red-50 dark:bg-red-900/40 rounded-xl border border-red-200 dark:border-red-500/30 animate-in fade-in zoom-in duration-200">
+                <p className="text-[10px] text-red-600 dark:text-red-200 mb-2 text-center uppercase font-bold tracking-wider">Confirm Delete?</p>
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => { onResetData(); setIsResetConfirm(false); }} 
-                    className="flex-1 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors"
-                  >
-                    Yes, Delete Everything
-                  </button>
-                  <button 
-                    onClick={() => setIsResetConfirm(false)}
-                    className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={() => { onResetData(); setIsResetConfirm(false); }} className="flex-1 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold">Yes</button>
+                  <button onClick={() => setIsResetConfirm(false)} className="flex-1 py-1.5 bg-white border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white rounded text-xs">No</button>
                 </div>
               </div>
             )}
-          </GlassCard>
+          </div>
+        </MagicBentoCard>
 
-          <div className="pt-6">
-            <div className="flex items-center justify-center gap-4 text-slate-300 dark:text-slate-600">
-               <div className="flex items-center gap-1.5 grayscale opacity-50">
-                 <Github size={16} />
-                 <span className="text-[10px] font-bold uppercase tracking-wider">v1.2.0 Stable</span>
-               </div>
-               <div className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />
-               <span className="text-[10px] font-bold uppercase opacity-50 tracking-wider">Made for students</span>
+        {/* Account / Logout */}
+        <MagicBentoCard
+          colSpan={1}
+          enableStars={false}
+          className="flex items-center justify-center cursor-pointer group bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm"
+        >
+          <div onClick={onLogout} className="flex flex-col items-center justify-center gap-3 h-full w-full py-6">
+            <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-white/5 group-hover:bg-slate-100 dark:group-hover:bg-white/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 border border-slate-200 dark:border-white/5 group-hover:border-slate-300 dark:group-hover:border-white/20">
+              <LogOut size={32} className="text-slate-400 dark:text-white/70 group-hover:text-slate-600 dark:group-hover:text-white transition-colors ml-1" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">Sign Out</h3>
+              <p className="text-xs text-slate-500 dark:text-white/40 group-hover:text-slate-700 dark:group-hover:text-white/60 transition-colors">End session securely</p>
             </div>
           </div>
-        </div>
-      </div>
+        </MagicBentoCard>
+
+        {/* Placeholder / Extra Info */}
+        <MagicBentoCard
+          title="Montra Pro"
+          description="Coming soon"
+          colSpan={2}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border-amber-200 dark:border-yellow-500/20 shadow-sm"
+        >
+          <div className="h-full flex items-center justify-between relative mt-2">
+            <div className="space-y-2 max-w-[60%]">
+              <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-yellow-100 dark:bg-yellow-500/20 border border-yellow-200 dark:border-yellow-500/30 text-yellow-700 dark:text-yellow-300 text-[10px] font-bold uppercase tracking-wider">
+                Early Access
+              </div>
+              <p className="text-sm text-slate-600 dark:text-white/60">Unlock advanced analytics, AI insights, and unlimited budget goals.</p>
+            </div>
+            <div className="absolute right-0 bottom-0 text-9xl opacity-10 dark:opacity-5 pointer-events-none select-none font-black text-amber-900 dark:text-white/20">
+              PRO
+            </div>
+          </div>
+        </MagicBentoCard>
+
+      </MagicBentoGrid>
     </div>
   );
 };

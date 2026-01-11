@@ -9,7 +9,7 @@ interface GlassCardProps {
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', hoverEffect = false }) => (
-  <div className={`glass-panel rounded-2xl p-6 transition-all duration-300 ${hoverEffect ? 'hover:shadow-lg hover:-translate-y-1' : ''} ${className}`}>
+  <div className={`glass-panel rounded-2xl p-5 md:p-6 transition-all duration-300 ${hoverEffect ? 'hover:shadow-lg hover:-translate-y-1' : ''} ${className}`}>
     {children}
   </div>
 );
@@ -27,7 +27,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({ className = '', varian
 
   return (
     <button
-      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${variants[variant]} ${className}`}
+      className={`px-4 py-3 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 ${variants[variant]} ${className}`}
       {...props}
     />
   );
@@ -37,7 +37,7 @@ export const GlassInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLI
   ({ className = '', ...props }, ref) => (
     <input
       ref={ref}
-      className={`w-full bg-white/40 dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-indigo-500/20 focus:border-slate-400 dark:focus:border-indigo-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-800 dark:text-slate-100 ${className}`}
+      className={`w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 md:py-2.5 text-base md:text-sm outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-indigo-500/20 focus:border-slate-400 dark:focus:border-indigo-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-800 dark:text-slate-100 ${className}`}
       {...props}
     />
   ));
@@ -50,9 +50,10 @@ interface GlassSelectProps {
   onChange?: (e: { target: { value: string } }) => void;
   placeholder?: string;
   direction?: 'up' | 'down';
+  align?: 'left' | 'right'; // Added align prop
 }
 
-export const GlassSelect: React.FC<GlassSelectProps> = ({ className = '', children, value, onChange, placeholder = 'Select...', direction = 'down', ...props }) => {
+export const GlassSelect: React.FC<GlassSelectProps> = ({ className = '', children, value, onChange, placeholder = 'Select...', direction = 'down', align = 'left', ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +92,9 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({ className = '', childr
     ? 'bottom-full mb-2 origin-bottom'
     : 'top-full mt-2 origin-top';
 
+  // Determine horizontal alignment classes
+  const alignmentClasses = align === 'right' ? 'right-0' : 'left-0';
+
   const animationClasses = direction === 'up'
     ? (isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 translate-y-2 pointer-events-none')
     : (isOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none');
@@ -100,7 +104,7 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({ className = '', childr
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-white/40 dark:bg-slate-900/60 border border-slate-200/60 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-indigo-500/20 transition-all text-slate-700 dark:text-slate-200 ${isOpen ? 'ring-2 ring-indigo-500/20 border-indigo-500/50 bg-white/60 dark:bg-slate-800/80' : 'hover:bg-white/60 dark:hover:bg-slate-800/40'}`}
+        className={`w-full flex items-center justify-between bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 md:py-2.5 text-base md:text-sm outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-indigo-500/20 transition-all text-slate-700 dark:text-slate-200 ${isOpen ? 'ring-2 ring-indigo-500/20 border-indigo-500/50 bg-white dark:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'}`}
       >
         <span className={`truncate mr-2 font-medium ${!selectedOption ? 'text-slate-400 dark:text-slate-500' : ''}`}>
           {selectedOption ? selectedOption.label : placeholder}
@@ -114,7 +118,7 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({ className = '', childr
       {/* Modern Glass Dropdown */}
       <div
         className={`
-          absolute z-50 w-full min-w-[120px] left-0
+          absolute z-50 w-full min-w-[120px] ${alignmentClasses}
           bg-white/90 dark:bg-slate-900/95 backdrop-blur-xl 
           border border-slate-200/60 dark:border-white/10 
           rounded-xl shadow-xl dark:shadow-black/50 

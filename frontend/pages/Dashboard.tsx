@@ -1,17 +1,17 @@
-
 import React, { useState } from 'react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, LabelList } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, LabelList, BarChart, Bar, LineChart, Line } from 'recharts';
 import { Transaction, Category, Budget, SavingsGoal, UserProfile } from '../types';
 import { GlassCard, GlassButton } from '../components/ui/Glass';
+import { CreditCardWidget } from '../components/CreditCardWidget';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
-import { TrendingUp, TrendingDown, ArrowUpRight, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, MoreHorizontal, Calendar, PieChart as PieChartIcon, Activity } from 'lucide-react';
 
 interface Props {
   transactions: Transaction[];
   budgets: Budget[];
   goals: SavingsGoal[];
   profile: UserProfile;
-  onAddTransaction: () => void;
+  onAddTransaction: (type: 'income' | 'expense') => void;
   currency: string;
   isDarkMode: boolean;
 }
@@ -19,88 +19,24 @@ interface Props {
 const CustomTooltip = ({ active, payload, currency }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const breakdownEntries = Object.entries(data.breakdown || {}) as [Category, number][];
-    
     return (
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/60 dark:border-white/10 p-4 rounded-2xl shadow-2xl dark:shadow-black/50 min-w-[210px] animate-fade-in z-50 ring-1 ring-slate-900/5">
-        <div className="flex justify-between items-center mb-2 border-b border-slate-100 dark:border-white/5 pb-2">
-          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{data.fullDateLabel}</p>
-        </div>
-        
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Daily Spending</span>
-          <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{currency}{data.amount.toFixed(2)}</span>
-        </div>
-        
-        {breakdownEntries.length > 0 ? (
-          <div className="space-y-2">
-            {breakdownEntries.sort((a, b) => b[1] - a[1]).map(([cat, amt]) => (
-              <div key={cat} className="flex justify-between items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center scale-75 ${CATEGORY_COLORS[cat]}`}>
-                    {React.cloneElement(CATEGORY_ICONS[cat] as React.ReactElement<any>, { size: 16 })}
-                  </div>
-                  <span className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold">{cat}</span>
-                </div>
-                <span className="text-[11px] text-slate-800 dark:text-slate-100 font-bold">{currency}{amt.toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-[10px] text-slate-400 italic py-2">No expenses recorded</p>
-        )}
+      <div className="bg-slate-900 text-white text-xs p-2 rounded-lg shadow-xl">
+        <p className="font-bold mb-1">{data.fullDateLabel}</p>
+        <p className="text-emerald-400 font-mono">{currency}{data.amount.toFixed(2)}</p>
       </div>
     );
   }
   return null;
 };
 
-const CustomDataLabel = (props: any) => {
-  const { x, y, value, index, currency } = props;
-  if (!value || value === 0) return null;
-
-  // Anti-collision: alternate label height slightly for every other point
-  const yOffset = index % 2 === 0 ? -30 : -45;
-
-  return (
-    <g>
-      <rect 
-        x={x - 22} 
-        y={y + yOffset} 
-        width={44} 
-        height={18} 
-        rx={9} 
-        className="fill-white dark:fill-slate-800 drop-shadow-sm pointer-events-none"
-      />
-      <text 
-        x={x} 
-        y={y + yOffset + 11} 
-        className="fill-indigo-600 dark:fill-indigo-400 text-[10px] font-extrabold pointer-events-none"
-        textAnchor="middle" 
-        dominantBaseline="middle" 
-      >
-        {currency}{Math.round(value)}
-      </text>
-      {/* Connector line for the taller labels */}
-      {index % 2 !== 0 && (
-        <line x1={x} y1={y} x2={x} y2={y + yOffset + 18} className="stroke-indigo-600 dark:stroke-indigo-400 opacity-20" strokeWidth={1} strokeDasharray="2 2" />
-      )}
-    </g>
-  );
-};
-
 export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profile, onAddTransaction, currency, isDarkMode }) => {
   const [hoveredData, setHoveredData] = useState<any>(null);
-
-  // Define dynamic colors based on theme
-  const chartColor = isDarkMode ? '#818cf8' : '#6366f1'; // Indigo 400 for dark, Indigo 500 for light
-  const axisColor = isDarkMode ? '#94a3b8' : '#94a3b8'; // Slate 400 works well for both, but could use #64748b (slate 500) for light
-  const dotStrokeColor = isDarkMode ? '#0f172a' : '#fff'; // Slate 900 (bg) for dark mode cutout effect, White for light
 
   const income = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
   const expenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
   const balance = income - expenses;
 
+  // Last 7 Days Data Generation
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -108,144 +44,188 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
   });
 
   const chartData = last7Days.map(date => {
-    const dayTransactions = transactions.filter(t => t.date.startsWith(date) && t.type === 'expense');
+    const dayTransactions = transactions.filter(t => t.date && t.date.startsWith(date) && t.type === 'expense');
     const dayTotal = dayTransactions.reduce((acc, t) => acc + t.amount, 0);
-    const breakdown = dayTransactions.reduce((acc, t) => {
-      acc[t.category as Category] = (acc[t.category as Category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<Category, number>);
     return {
       date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-      fullDateLabel: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      fullDateLabel: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       amount: dayTotal,
-      breakdown: breakdown
     };
   });
 
-  const getActiveCategories = () => {
-    if (hoveredData && hoveredData.breakdown && Object.keys(hoveredData.breakdown).length > 0) {
-      return Object.entries(hoveredData.breakdown as Record<string, number>).sort(([, a], [, b]) => b - a).slice(0, 4);
-    }
-    const expensesByCategory = transactions.filter(t => t.type === 'expense').reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
-    return (Object.entries(expensesByCategory) as [string, number][]).sort(([, a], [, b]) => b - a).slice(0, 4);
-  };
-
-  const topCategories = getActiveCategories();
-  const totalInContext = hoveredData ? hoveredData.amount : expenses;
+  const recentTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-10">
+
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">
-            Good Morning{profile.name ? `, ${profile.name.split(' ')[0]}` : ''}
-          </h1>
-          <div className="flex items-center gap-2 text-sm md:text-base text-slate-500 dark:text-slate-400 font-light">
-             {profile.school && (
-               <>
-                 <span className="font-semibold text-slate-700 dark:text-slate-300">{profile.school}</span>
-                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-               </>
-             )}
-             <span>Financial overview</span>
+        <div className="flex items-center gap-3">
+          <div className="bg-slate-900 text-white p-2 rounded-lg">
+            <Wallet size={20} />
           </div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-0">My Montra</h1>
         </div>
-        <GlassButton onClick={onAddTransaction} className="shadow-emerald-100 dark:shadow-emerald-900/10 w-full md:w-auto">
-          + Quick Add
-        </GlassButton>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => onAddTransaction('income')}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+          >
+            <TrendingUp size={16} />
+            Add Income
+          </button>
+          <button
+            onClick={() => onAddTransaction('expense')}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 transition-all active:scale-95"
+          >
+            <TrendingDown size={16} />
+            Add Expense
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <GlassCard hoverEffect className="relative overflow-hidden group">
-          <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 dark:text-white transition-opacity"><Wallet size={96} /></div>
-          {/* Subtle Glow for Total Balance */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-          
-          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Total Balance</p>
-          <h2 className="text-3xl font-semibold text-slate-800 dark:text-white relative z-10">{currency}{balance.toFixed(2)}</h2>
-          <div className="mt-4 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 relative z-10">
-            <span className="text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5"><ArrowUpRight size={10} /> +2.5%</span> vs last month
-          </div>
-        </GlassCard>
+      {/* Top Grid: Credit Card + Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <GlassCard hoverEffect className="relative overflow-hidden group">
-           <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 text-emerald-500 transition-opacity">
-             <TrendingUp size={96} />
-           </div>
-           {/* Emerald Glow for Income */}
-           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-           
-           <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Income</p>
-           <h2 className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 relative z-10">+{currency}{income.toFixed(2)}</h2>
-        </GlassCard>
+        {/* Left Column: Credit Card */}
+        <div className="lg:col-span-1 h-full">
+          <CreditCardWidget balance={balance} currency={currency} profile={profile} />
+        </div>
 
-        <GlassCard hoverEffect className="relative overflow-hidden group">
-           <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 text-red-500 transition-opacity">
-             <TrendingDown size={96} />
-           </div>
-           {/* Red Glow for Expenses */}
-           <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+        {/* Right Column: Key Stats */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
 
-           <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Expenses</p>
-           <h2 className="text-3xl font-semibold text-red-500 dark:text-red-400 relative z-10">-{currency}{expenses.toFixed(2)}</h2>
-        </GlassCard>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <GlassCard className="md:col-span-2 flex flex-col h-80 relative group">
-          <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-            Weekly Activity
-            {hoveredData && <span className="text-[10px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full animate-pulse">Inspecting {hoveredData.date}</span>}
-          </h3>
-          <div className="flex-1 w-full min-h-0 relative">
-            <div className="absolute inset-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 50, right: 20, left: 10, bottom: 0 }} onMouseMove={(e: any) => e?.activePayload && setHoveredData(e.activePayload[0].payload)} onMouseLeave={() => setHoveredData(null)}>
-                  <defs>
-                    <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={chartColor} stopOpacity={0.25}/><stop offset="95%" stopColor={chartColor} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: axisColor, fontWeight: 500}} dy={10} />
-                  <YAxis hide domain={[0, (dataMax: number) => (dataMax === 0 ? 100 : dataMax * 1.6)]} />
-                  <Tooltip content={<CustomTooltip currency={currency} />} cursor={{ stroke: chartColor, strokeOpacity: 0.15, strokeWidth: 2 }} />
-                  <Area type="monotone" dataKey="amount" stroke={chartColor} strokeWidth={2.5} fillOpacity={1} fill="url(#colorAmount)" activeDot={{ r: 6, strokeWidth: 3, stroke: dotStrokeColor, fill: chartColor, className: 'shadow-lg' }} isAnimationActive={true} animationDuration={1200}>
-                    <LabelList dataKey="amount" content={<CustomDataLabel currency={currency} />} />
-                  </Area>
-                </AreaChart>
-              </ResponsiveContainer>
+          {/* Income Stat */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 H-2 rounded-full bg-blue-500" />
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Your Income</span>
+              <Activity size={14} className="text-slate-300 ml-auto" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{income.toLocaleString()}</h3>
+              <p className="text-xs text-slate-500">Your Income Amount</p>
+            </div>
+            <div className="mt-4">
+              <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-1 rounded-full font-bold">+10%</span>
             </div>
           </div>
-        </GlassCard>
 
-        <GlassCard className={`h-80 flex flex-col transition-all duration-300 ${hoveredData ? 'ring-2 ring-indigo-500/20 dark:ring-indigo-500/40 shadow-xl scale-[1.02]' : ''}`}>
-          <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-1">{hoveredData ? `Daily Details` : 'Spending Mix'}</h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-4">{hoveredData ? `${hoveredData.fullDateLabel}` : 'Top Categories (7d)'}</p>
-          <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-            {topCategories.length > 0 ? topCategories.map(([cat, amount]) => {
-               const percentage = totalInContext > 0 ? Math.round((amount / totalInContext) * 100) : 0;
-               return (
-                <div key={cat} className="group animate-fade-in">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${CATEGORY_COLORS[cat as Category]}`}>
-                        {React.cloneElement(CATEGORY_ICONS[cat as Category] as React.ReactElement<any>, { size: 20 })}
-                      </div>
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{cat}</span>
-                    </div>
-                    <div className="text-right"><span className="block text-sm font-bold text-slate-800 dark:text-white">{currency}{amount.toFixed(0)}</span></div>
+          {/* Expenses Stat */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 H-2 rounded-full bg-yellow-500" />
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Total Expenses</span>
+              <PieChartIcon size={14} className="text-slate-300 ml-auto" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{expenses.toLocaleString()}</h3>
+              <p className="text-xs text-slate-500">Your Total Spend</p>
+            </div>
+            <div className="mt-4">
+              <span className="bg-yellow-100 text-yellow-700 text-[10px] px-2 py-1 rounded-full font-bold">28%</span>
+            </div>
+          </div>
+
+          {/* Total Money Stat */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 H-2 rounded-full bg-emerald-500" />
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Total Money</span>
+              <Wallet size={14} className="text-slate-300 ml-auto" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{(balance + 1450).toLocaleString()}</h3> {/* Mocking total assets */}
+              <p className="text-xs text-slate-500">Total in wallet</p>
+            </div>
+            <div className="mt-4">
+              <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-1 rounded-full font-bold">+12%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Grid: Analytics + Transactions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Money Analytics (Chart) */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Money Analytics</h3>
+            <button className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+              Full Stats
+            </button>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-1">{currency}{balance.toLocaleString()}</h2>
+            <p className="text-slate-500 text-sm">You saved 10% more than last month 👏</p>
+          </div>
+
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                  dy={10}
+                  interval={0}
+                />
+                <Tooltip
+                  cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  content={<CustomTooltip currency={currency} />}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#6366f1"
+                  strokeWidth={4}
+                  dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* All Transaction List */}
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">All Transaction</h3>
+            <ArrowUpRight size={18} className="text-slate-400 hover:text-slate-600 cursor-pointer" />
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar max-h-[400px]">
+            {recentTransactions.map((t) => (
+              <div key={t.id} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm ${CATEGORY_COLORS[t.category]}`}>
+                    {t.category === 'Food' ? '🍔' : t.category === 'Transport' ? '🚗' : t.category === 'Entertainment' ? '🎬' : '📦'}
                   </div>
-                  <div className="h-1.5 w-full bg-slate-100/50 dark:bg-white/5 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-700 ease-out ${CATEGORY_COLORS[cat as Category].split(' ')[0]}`} style={{ width: `${percentage}%` }} />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-white truncate max-w-[120px]">{t.description}</p>
+                    <p className="text-[10px] text-slate-500">{new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                   </div>
                 </div>
-               );
-            }) : <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 text-sm gap-2"><TrendingDown size={32} strokeWidth={1} /><p className="font-medium">No activity recorded</p></div>}
+                <span className={`text-sm font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {t.type === 'income' ? '+' : '-'}{currency}{t.amount.toLocaleString()}
+                </span>
+              </div>
+            ))}
+
+            {recentTransactions.length === 0 && (
+              <div className="text-center py-10 text-slate-400">
+                <p>No recent transactions</p>
+              </div>
+            )}
           </div>
-        </GlassCard>
+
+          <button className="w-full mt-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            View All
+          </button>
+        </div>
       </div>
     </div>
   );
