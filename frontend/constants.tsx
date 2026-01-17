@@ -6,6 +6,7 @@ import {
   Target,
   Settings,
   BarChart3,
+  Landmark,
   Coffee,
   Bus,
   Home,
@@ -85,6 +86,7 @@ export const NAV_ITEMS = [
   { id: 'transactions', label: 'Transactions', icon: Receipt },
   { id: 'budgets', label: 'Budgets', icon: PiggyBank },
   { id: 'goals', label: 'Goals', icon: Target },
+  { id: 'investments', label: 'Investments', icon: Landmark },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];

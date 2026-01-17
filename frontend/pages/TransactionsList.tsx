@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Transaction, TransactionType } from '../types';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
-import { Search, Filter, Trash2, ArrowUpDown, Calendar, ChevronDown, Download, Pencil, Check, Plus, Wallet, Tag } from 'lucide-react';
+import { Search, Filter, Trash2, ArrowUpDown, Calendar, ChevronDown, Download, Pencil, Check, Plus, Wallet, Tag, SearchX } from 'lucide-react';
 import { Fragment } from 'react';
 
 interface Props {
@@ -190,8 +190,8 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, onEd
                 <div className="divide-y divide-slate-300 dark:divide-white/10">
                     {filteredTransactions.length === 0 ? (
                         <div className="text-center py-32">
-                            <div className="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl animate-bounce">
-                                🔍
+                            <div className="w-16 h-16 bg-indigo-50 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-500 dark:text-indigo-400">
+                                <SearchX size={32} strokeWidth={2} />
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">No transactions found</h3>
                             <p className="text-slate-500 dark:text-slate-400">Try adjusting to filters or search terms.</p>
@@ -220,7 +220,7 @@ export const TransactionsList: React.FC<Props> = ({ transactions, onDelete, onEd
                                 {/* Description Mobile: Full Width, Desktop: col-span-4 */}
                                 <div className="col-span-1 md:col-span-4 flex items-start gap-4">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm ${CATEGORY_COLORS[t.category] || 'bg-slate-100 text-slate-500'}`}>
-                                        {CATEGORY_ICONS[t.category] || '📦'}
+                                        {CATEGORY_ICONS[t.category] || <Tag size={20} />}
                                     </div>
                                     <div className="min-w-0 flex flex-col items-start gap-1.5">
                                         <p className="font-bold text-slate-900 dark:text-white truncate text-sm md:text-base">

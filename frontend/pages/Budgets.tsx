@@ -5,6 +5,7 @@ import { GlassCard, GlassButton, GlassInput, GlassSelect } from '../components/u
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
 import { Plus, Pencil, Trash2, PiggyBank, Sparkles, AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid } from 'recharts';
+import { BudgetModal } from '../components/BudgetModal';
 
 interface Props {
   transactions: Transaction[];
@@ -31,9 +32,9 @@ const CustomTooltip = ({ active, payload, label, currency }: any) => {
 
 export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, onDeleteBudget, currency }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [limit, setLimit] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<Category>(Category.FOOD);
+  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+
+  // Define which categories are considered income and should be filtered out of budgets
 
   // Define which categories are considered income and should be filtered out of budgets
   const INCOME_CATEGORIES = [Category.INCOME, Category.INCOME_SOURCE, Category.SCHOLARSHIP, Category.GIFT];
@@ -94,20 +95,14 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
     };
   }, [transactions, budgets]);
 
-  const handleSave = () => {
-    if (!limit || parseFloat(limit) <= 0) return;
-    onSaveBudget({
-      category: editingCategory || selectedCategory,
-      limit: parseFloat(limit)
-    });
+  const handleSave = (budget: Budget) => {
+    onSaveBudget(budget);
     setIsAdding(false);
-    setEditingCategory(null);
-    setLimit('');
+    setEditingBudget(null);
   };
 
   const startEdit = (b: Budget) => {
-    setEditingCategory(b.category);
-    setLimit(b.limit.toString());
+    setEditingBudget(b);
     setIsAdding(true);
   };
 
@@ -127,45 +122,14 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
         )}
       </div>
 
-      {isAdding && (
-        <GlassCard className="animate-slide-up border-indigo-100 dark:border-indigo-500/20 bg-white/90 dark:bg-slate-900/90 shadow-xl relative z-20">
-          <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">{editingCategory ? `Edit ${editingCategory} Budget` : 'Create New Budget'}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {!editingCategory && (
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Category</label>
-                <GlassSelect
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value as Category)}
-                  className="font-bold text-slate-800 dark:text-slate-100"
-                >
-                  {Object.values(Category)
-                    .filter(c => !INCOME_CATEGORIES.includes(c))
-                    .map(cat => (
-                      <option key={cat} value={cat} className="font-bold">{cat}</option>
-                    ))
-                  }
-                </GlassSelect>
-              </div>
-            )}
-            <div className={editingCategory ? 'col-span-2' : ''}>
-              <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Monthly Limit ({currency})</label>
-              <GlassInput
-                type="number"
-                placeholder="0.00"
-                value={limit}
-                onChange={(e) => setLimit(e.target.value)}
-                autoFocus
-                className="font-bold text-slate-800 dark:text-slate-100"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <GlassButton onClick={handleSave} className="flex-1 font-bold">Save Budget</GlassButton>
-            <GlassButton variant="secondary" onClick={() => { setIsAdding(false); setEditingCategory(null); }} className="px-6 font-bold">Cancel</GlassButton>
-          </div>
-        </GlassCard>
-      )}
+      <BudgetModal
+        isOpen={isAdding}
+        onClose={() => { setIsAdding(false); setEditingBudget(null); }}
+        onSave={handleSave}
+        currency={currency}
+        initialData={editingBudget}
+        existingCategories={budgets.map(b => b.category)}
+      />
 
       {budgets.length > 0 && spendingData.chartData.length > 0 && (
         <GlassCard className="p-6 relative overflow-hidden group">
@@ -239,7 +203,7 @@ export const Budgets: React.FC<Props> = ({ transactions, budgets, onSaveBudget, 
           <p className="text-slate-600 dark:text-slate-300 font-bold max-w-sm mb-8 leading-relaxed">
             Stop wondering where your money went and start telling it where to go. Create a budget to track your limits effortlessly.
           </p>
-          <GlassButton onClick={() => setIsAdding(true)} className="px-8 py-4 text-lg font-bold shadow-indigo-100 dark:shadow-none scale-105 hover:scale-110 active:scale-95 transition-all">
+          <GlassButton onClick={() => setIsAdding(true)} className="px-8 py-4 text-lg font-bold bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 shadow-xl scale-105 hover:scale-110 active:scale-95 transition-all border-none">
             <Plus size={20} className="mr-1" />
             Create Your First Budget
           </GlassButton>

@@ -60,6 +60,7 @@ export interface UserProfile {
   phone: string;
   avatar: string;
   bio: string;
+  cardLastFour?: string;
 }
 
 export interface UserSettings {
@@ -69,6 +70,32 @@ export interface UserSettings {
   isDarkMode: boolean;
   profile: UserProfile;
   investmentAmount: number;
+  investments: Investment[];
+}
+
+// Investment Types
+export type InvestmentType = 'stocks' | 'mutual_funds' | 'gold' | 'crypto' | 'fixed_deposit' | 'real_estate' | 'other';
+
+export interface Investment {
+  id: string;
+  name: string;
+  type: InvestmentType;
+  symbol?: string;
+  purchasePrice: number;
+  currentValue: number;
+  quantity: number;
+  purchaseDate: string;
+  notes?: string;
+}
+
+export interface InvestmentTransaction {
+  id: string;
+  investmentId: string;
+  type: 'buy' | 'sell' | 'dividend';
+  amount: number;
+  quantity?: number;
+  date: string;
+  notes?: string;
 }
 
 export interface AppState {

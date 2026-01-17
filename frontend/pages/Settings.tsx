@@ -114,12 +114,20 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
                 <span className="truncate">{user?.email || settings.profile.email || 'No email connected'}</span>
               </div>
 
-              <GlassInput
-                placeholder="Edit your bio..."
-                value={settings.profile.bio}
-                onChange={(e) => handleProfileChange('bio', e.target.value)}
-                className="text-xs py-2 bg-slate-50 dark:bg-white/5 border-none"
-              />
+
+              <div className="mt-2 w-full">
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1 block">Card ending in</label>
+                <GlassInput
+                  placeholder="Last 4"
+                  maxLength={4}
+                  value={settings.profile.cardLastFour || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    handleProfileChange('cardLastFour', val);
+                  }}
+                  className="text-xs py-2 bg-slate-50 dark:bg-white/5 border-none font-mono tracking-widest"
+                />
+              </div>
             </div>
           </div>
         </MagicBentoCard>
@@ -196,14 +204,14 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
               <GlassSelect
                 value={settings.currency}
                 onChange={(e) => onUpdateSettings({ ...settings, currency: e.target.value })}
-                className="min-w-[120px]"
+                className="w-24 text-xs"
                 align="right"
               >
-                <option value="$">USD ($)</option>
-                <option value="€">EUR (€)</option>
-                <option value="£">GBP (£)</option>
-                <option value="¥">JPY (¥)</option>
-                <option value="₹">INR (₹)</option>
+                <option value="$">($) USD</option>
+                <option value="€">(€) EUR</option>
+                <option value="£">(£) GBP</option>
+                <option value="¥">(¥) JPY</option>
+                <option value="₹">(₹) INR</option>
               </GlassSelect>
             </div>
           </div>
@@ -292,6 +300,6 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
         </MagicBentoCard>
 
       </MagicBentoGrid>
-    </div>
+    </div >
   );
 };

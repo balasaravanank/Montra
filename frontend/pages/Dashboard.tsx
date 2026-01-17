@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, LabelList, BarChart, Bar, LineChart, Line } from 'recharts';
 import { Transaction, Category, Budget, SavingsGoal, UserProfile } from '../types';
 import { GlassCard, GlassButton } from '../components/ui/Glass';
 import { CreditCardWidget } from '../components/CreditCardWidget';
-import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
-import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, MoreHorizontal, Calendar, PieChart as PieChartIcon, Activity, Plus, X, Landmark, Target } from 'lucide-react';
+import { CATEGORY_ICONS, CATEGORY_COLORS, GOAL_ICON_COMPONENTS } from '../constants';
+import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, MoreHorizontal, Calendar, PieChart as PieChartIcon, Activity, Plus, X, Landmark, Target, AlertCircle } from 'lucide-react';
 
 interface Props {
   transactions: Transaction[];
@@ -12,6 +12,7 @@ interface Props {
   goals: SavingsGoal[];
   profile: UserProfile;
   onAddTransaction: (type: 'income' | 'expense') => void;
+  onNavigate?: (view: string) => void;
   currency: string;
   isDarkMode: boolean;
   investmentAmount: number;
@@ -31,7 +32,7 @@ const CustomTooltip = ({ active, payload, currency }: any) => {
   return null;
 };
 
-export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profile, onAddTransaction, currency, isDarkMode, investmentAmount, onUpdateInvestment }) => {
+export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profile, onAddTransaction, onNavigate, currency, isDarkMode, investmentAmount, onUpdateInvestment }) => {
   const [hoveredData, setHoveredData] = useState<any>(null);
   const [showInvestmentModal, setShowInvestmentModal] = useState(false);
   const [newInvestmentAmount, setNewInvestmentAmount] = useState('');
@@ -39,6 +40,34 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
 
   // Fallback for undefined investmentAmount (for existing users without this field)
   const safeInvestmentAmount = investmentAmount ?? 0;
+
+  // Auto-scroll logic for mobile carousel
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  useEffect(() => {
+    // Only run on mobile/tablet (less than 1024px)
+    if (window.innerWidth >= 1024) return;
+
+    const interval = setInterval(() => {
+      if (isInteracting || !scrollContainerRef.current) return;
+
+      const container = scrollContainerRef.current;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      // If we are at the end (or close), loop back to start smoothly
+      if (container.scrollLeft >= maxScroll - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        // Scroll to the next card (approx width of one card + gap)
+        // Card min-width is ~85vw or 380px.
+        const scrollAmount = container.clientWidth * 0.85;
+        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }, 3500); // 3.5 seconds interval
+
+    return () => clearInterval(interval);
+  }, [isInteracting]);
 
   // Current date info for period calculations
   const now = new Date();
@@ -132,12 +161,9 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="bg-slate-900 text-white p-2 rounded-lg">
-            <Wallet size={20} />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-0">My Montra</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-0">Welcome, {profile.name || 'Back'}</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3">
           <button
             onClick={() => onAddTransaction('income')}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
@@ -155,8 +181,81 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
         </div>
       </div>
 
-      {/* Top Grid: Credit Card + Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Mobile Carousel (Visible only on mobile/tablet) */}
+      <div
+        className="flex lg:hidden overflow-x-auto snap-x snap-mandatory gap-4 pb-6 -mx-4 px-4 scrollbar-none"
+        ref={scrollContainerRef}
+        onTouchStart={() => setIsInteracting(true)}
+        onTouchEnd={() => setTimeout(() => setIsInteracting(false), 3000)}
+        onMouseEnter={() => setIsInteracting(true)}
+        onMouseLeave={() => setIsInteracting(false)}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <div className="min-w-[90vw] sm:min-w-[380px] snap-center">
+          <CreditCardWidget balance={balance} currency={currency} profile={profile} />
+        </div>
+
+        <div className="min-w-[85vw] sm:min-w-[380px] snap-center flex flex-col group">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full min-h-[200px] hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Your Income</span>
+              <Activity size={24} className="text-slate-300 ml-auto transition-colors group-hover:text-blue-500" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{income.toLocaleString()}</h3>
+              <p className="text-xs text-slate-400">This month: {currency}{currentMonthIncome.toLocaleString()}</p>
+              <p className="text-xs text-slate-500">Your Income Amount</p>
+            </div>
+            <div className="mt-4">
+              <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${incomeChange >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                {incomeChange >= 0 ? '+' : ''}{incomeChange}% vs last month
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-[85vw] sm:min-w-[380px] snap-center flex flex-col group">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full min-h-[200px] hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Total Expenses</span>
+              <PieChartIcon size={24} className="text-slate-300 ml-auto transition-colors group-hover:text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{expenses.toLocaleString()}</h3>
+              <p className="text-xs text-slate-400">This month: {currency}{currentMonthExpenses.toLocaleString()}</p>
+              <p className="text-xs text-slate-500">Your Total Spend</p>
+            </div>
+            <div className="mt-4">
+              <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${expenseRatio <= 50 ? 'bg-emerald-100 text-emerald-700' : expenseRatio <= 80 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                {expenseRatio}% of income spent
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-[85vw] sm:min-w-[380px] snap-center flex flex-col group">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full min-h-[200px] hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Total Invested</span>
+              <Landmark size={24} className="text-slate-300 ml-auto transition-colors group-hover:text-purple-500" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{safeInvestmentAmount.toLocaleString()}</h3>
+              <p className="text-xs text-slate-400">Savings rate: {savingsRate}%</p>
+              <p className="text-xs text-slate-500">Total money in your wallet</p>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="bg-purple-100 text-purple-700 text-[10px] px-2 py-1 rounded-full font-bold">Investment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Grid: Credit Card + Stats (Desktop) */}
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* Left Column: Credit Card */}
         <div className="lg:col-span-1 h-full">
@@ -167,11 +266,11 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* Income Stat */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
               <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Your Income</span>
-              <Activity size={14} className="text-slate-300 ml-auto" />
+              <Activity size={24} className="text-slate-300 ml-auto transition-colors group-hover:text-blue-500" />
             </div>
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{income.toLocaleString()}</h3>
@@ -186,11 +285,11 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
           </div>
 
           {/* Expenses Stat */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
               <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Total Expenses</span>
-              <PieChartIcon size={14} className="text-slate-300 ml-auto" />
+              <PieChartIcon size={24} className="text-slate-300 ml-auto transition-colors group-hover:text-amber-500" />
             </div>
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{expenses.toLocaleString()}</h3>
@@ -205,11 +304,11 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
           </div>
 
           {/* Total Investment Stat */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full hover:shadow-md transition-shadow group">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
               <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">Total Invested</span>
-              <Landmark size={14} className="text-slate-300 ml-auto" />
+              <Landmark size={24} className="text-slate-300 ml-auto transition-colors group-hover:text-purple-500" />
             </div>
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currency}{safeInvestmentAmount.toLocaleString()}</h3>
@@ -218,13 +317,6 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
             </div>
             <div className="mt-4 flex items-center justify-between">
               <span className="bg-purple-100 text-purple-700 text-[10px] px-2 py-1 rounded-full font-bold">Investment</span>
-              <button
-                onClick={() => setShowInvestmentModal(true)}
-                className="flex items-center gap-1 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-bold transition-all active:scale-95"
-              >
-                <Plus size={12} />
-                Add
-              </button>
             </div>
           </div>
         </div>
@@ -268,42 +360,6 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
             </div>
           )}
 
-          {/* Goal Focus */}
-          {goalReminders.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg text-blue-500">
-                  <Target size={18} />
-                </div>
-                <h3 className="font-bold text-slate-900 dark:text-white">Goal Focus</h3>
-              </div>
-
-              <div className="space-y-4">
-                {goalReminders.map(goal => {
-                  const daysLeft = Math.ceil((new Date(goal.deadline!).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                  return (
-                    <div key={goal.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center text-blue-500 shadow-sm border border-slate-100 dark:border-slate-700">
-                          <Target size={20} />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-slate-800 dark:text-white">{goal.name}</p>
-                          <p className="text-xs text-slate-500 font-medium">
-                            {daysLeft <= 0 ? 'Due Today!' : `${daysLeft} days left`}
-                          </p>
-                        </div>
-                      </div>
-                      <button className="px-3 py-1.5 bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/20 transition-colors">
-                        Boost
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
         </div>
       )}
 
@@ -332,13 +388,21 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
 
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-1">{currency}{balance.toLocaleString()}</h2>
-            <p className="text-slate-500 text-sm">
-              {savingsRate > 0
-                ? `You're saving ${savingsRate}% of your income 🎯`
-                : savingsRate === 0
-                  ? 'Start tracking your income and expenses!'
-                  : `You're spending ${Math.abs(savingsRate)}% more than you earn ⚠️`}
-            </p>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              {savingsRate > 0 ? (
+                <>
+                  <span>You're saving {savingsRate}% of your income</span>
+                  <Target size={16} className="text-emerald-500" />
+                </>
+              ) : savingsRate === 0 ? (
+                <span>Start tracking your income and expenses!</span>
+              ) : (
+                <>
+                  <span>You're spending {Math.abs(savingsRate)}% more than you earn</span>
+                  <AlertCircle size={16} className="text-red-500" />
+                </>
+              )}
+            </div>
           </div>
 
           <div className="h-64 w-full">
@@ -433,8 +497,8 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
             {recentTransactions.map((t) => (
               <div key={t.id} className="flex items-center justify-between group cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm ${CATEGORY_COLORS[t.category]}`}>
-                    {t.category === 'Food' ? '🍔' : t.category === 'Transport' ? '🚗' : t.category === 'Entertainment' ? '🎬' : '📦'}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${CATEGORY_COLORS[t.category]}`}>
+                    {CATEGORY_ICONS[t.category] || <MoreHorizontal size={20} />}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-800 dark:text-white truncate max-w-[120px]">{t.description}</p>
@@ -454,10 +518,138 @@ export const Dashboard: React.FC<Props> = ({ transactions, budgets, goals, profi
             )}
           </div>
 
-          <button className="w-full mt-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <button
+            onClick={() => onNavigate?.('transactions')}
+            className="w-full mt-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
             View All
           </button>
         </div>
+      </div>
+
+      {/* Goal Reminders & Savings Rate */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+
+        {/* Goal Reminders Card */}
+        <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                <Target size={20} className="text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Goal Reminders</h3>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {goals.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                <Target size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No active goals yet</p>
+                <p className="text-xs mt-1">Start saving for something special!</p>
+              </div>
+            ) : (
+              goals
+                .filter(goal => goal.currentAmount < goal.targetAmount)
+                .slice(0, 3)
+                .map((goal) => {
+                  const percentage = (goal.currentAmount / goal.targetAmount) * 100;
+                  const remaining = goal.targetAmount - goal.currentAmount;
+                  const daysLeft = goal.deadline
+                    ? Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 3600 * 24))
+                    : null;
+
+                  return (
+                    <div key={goal.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                            {GOAL_ICON_COMPONENTS[goal.icon] ? React.createElement(GOAL_ICON_COMPONENTS[goal.icon], { size: 18 }) : <Target size={18} />}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-slate-800 dark:text-white">{goal.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {currency}{remaining.toLocaleString()} left
+                              {daysLeft !== null && daysLeft > 0 && ` • ${daysLeft} days`}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{percentage.toFixed(0)}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+
+          {goals.filter(g => g.currentAmount < g.targetAmount).length > 3 && (
+            <button className="w-full mt-4 py-2 text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors">
+              View All Goals
+            </button>
+          )}
+        </div>
+
+        {/* Savings Rate Card */}
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 p-6 md:p-8 rounded-3xl shadow-sm border border-emerald-100 dark:border-emerald-900/30">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                <TrendingUp size={20} className="text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Savings Performance</h3>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex items-end gap-2 mb-2">
+              <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400">
+                {savingsRate >= 0 ? savingsRate : 0}%
+              </span>
+              {savingsRate > 0 && (
+                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-2">
+                  Savings Rate
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              {savingsRate > 0
+                ? `You're saving ${savingsRate}% of your income this month!`
+                : savingsRate === 0
+                  ? 'Start tracking to see your savings rate'
+                  : `Spending ${Math.abs(savingsRate)}% more than earning`
+              }
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/50 dark:bg-slate-800/50 p-4 rounded-2xl">
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">This Month</p>
+              <p className="text-lg font-black text-slate-800 dark:text-white">{currency}{currentMonthIncome.toLocaleString()}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">Income</p>
+            </div>
+            <div className="bg-white/50 dark:bg-slate-800/50 p-4 rounded-2xl">
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">This Month</p>
+              <p className="text-lg font-black text-slate-800 dark:text-white">{currency}{currentMonthExpenses.toLocaleString()}</p>
+              <p className="text-xs text-red-500 dark:text-red-400 font-semibold">Expenses</p>
+            </div>
+          </div>
+
+          {savingsRate > 0 && (
+            <div className="mt-4 p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <TrendingUp size={14} />
+                Keep it up! You're on track to save {currency}{(currentMonthIncome - currentMonthExpenses).toLocaleString()} this month.
+              </p>
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Investment Modal */}

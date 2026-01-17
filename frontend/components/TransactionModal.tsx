@@ -437,7 +437,8 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
               {/* Amount Input */}
               <div className="text-center py-4 px-5">
                 <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-1">Amount</p>
-                <div className="flex items-center justify-center gap-1 overflow-hidden">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white flex-shrink-0">{currency}</span>
                   <input
                     type="number"
                     step="0.01"
@@ -445,10 +446,9 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     autoFocus
-                    className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white bg-transparent border-none outline-none text-right min-w-[60px] max-w-[200px] placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                    style={{ width: `${Math.max(60, (amount?.toString().length || 3) * 20)}px` }}
+                    className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white bg-transparent border-none outline-none text-left min-w-[60px] max-w-[200px] placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                    style={{ width: `${Math.max(60, (amount?.toString().length || 3) * 24)}px` }}
                   />
-                  <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white flex-shrink-0">{currency}</span>
                 </div>
               </div>
 

@@ -31,6 +31,7 @@ const TransactionsList = React.lazy(() => import('./pages/TransactionsList').the
 const Budgets = React.lazy(() => import('./pages/Budgets').then(module => ({ default: module.Budgets })));
 const Goals = React.lazy(() => import('./pages/Goals').then(module => ({ default: module.Goals })));
 const Analytics = React.lazy(() => import('./pages/Analytics').then(module => ({ default: module.Analytics })));
+const Investments = React.lazy(() => import('./pages/Investments').then(module => ({ default: module.Investments })));
 const Settings = React.lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
 const Auth = React.lazy(() => import('./pages/Auth').then(module => ({ default: module.Auth })));
 
@@ -42,6 +43,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   theme: 'vibrant',
   isDarkMode: false,
   investmentAmount: 0,
+  investments: [],
   profile: {
     name: '',
     email: '',
@@ -318,7 +320,35 @@ const AppContent = () => {
           <Analytics
             transactions={transactions}
             budgets={budgets}
+            goals={goals}
             currency={settings.currency}
+          />
+        );
+      case 'investments':
+        return (
+          <Investments
+            investments={settings.investments || []}
+            currency={settings.currency}
+            onAddInvestment={(investment) => {
+              const newInvestment = { ...investment, id: Date.now().toString() };
+              const newSettings = {
+                ...settings,
+                investments: [...(settings.investments || []), newInvestment]
+              };
+              handleUpdateSettings(newSettings);
+            }}
+            onUpdateInvestment={(investment) => {
+              const newInvestments = (settings.investments || []).map(inv =>
+                inv.id === investment.id ? investment : inv
+              );
+              const newSettings = { ...settings, investments: newInvestments };
+              handleUpdateSettings(newSettings);
+            }}
+            onDeleteInvestment={(id) => {
+              const newInvestments = (settings.investments || []).filter(inv => inv.id !== id);
+              const newSettings = { ...settings, investments: newInvestments };
+              handleUpdateSettings(newSettings);
+            }}
           />
         );
       case 'settings':
@@ -342,13 +372,13 @@ const AppContent = () => {
               setEditingTransaction(null);
               setModalOpen(true);
             }}
+            onNavigate={(view) => setCurrentView(view as View)}
             currency={settings.currency}
             isDarkMode={settings.isDarkMode}
-            investmentAmount={settings.investmentAmount}
-            onUpdateInvestment={(amount) => {
-              const newSettings = { ...settings, investmentAmount: amount };
-              handleUpdateSettings(newSettings);
-            }}
+            investmentAmount={
+              (settings.investments || []).reduce((acc, inv) => acc + (inv.currentValue * inv.quantity), 0)
+            }
+            onUpdateInvestment={() => { }}
           />
         );
     }

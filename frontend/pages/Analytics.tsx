@@ -15,7 +15,7 @@ import {
     Line,
     Legend
 } from 'recharts';
-import { Transaction, Category, Budget } from '../types';
+import { Transaction, Category, Budget, SavingsGoal } from '../types';
 import { CATEGORY_ICONS, CATEGORY_COLORS } from '../constants';
 import {
     TrendingUp,
@@ -35,12 +35,18 @@ import {
     Clock,
     AlertCircle,
     CheckCircle2,
-    Flame
+    Flame,
+    PlusCircle,
+    ArrowRight,
+    CreditCard,
+    Receipt,
+    Banknote
 } from 'lucide-react';
 
 interface Props {
     transactions: Transaction[];
     budgets: Budget[];
+    goals: SavingsGoal[];
     currency: string;
 }
 
@@ -90,7 +96,7 @@ const CustomAreaTooltip = ({ active, payload, label, currency }: any) => {
     return null;
 };
 
-export const Analytics: React.FC<Props> = ({ transactions, budgets, currency }) => {
+export const Analytics: React.FC<Props> = ({ transactions, budgets, goals, currency }) => {
     const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
     const [chartType, setChartType] = useState<'area' | 'bar'>('area');
 
@@ -255,6 +261,91 @@ export const Analytics: React.FC<Props> = ({ transactions, budgets, currency }) 
 
     const health = getHealthLabel(healthScore);
 
+    // Monthly comparison calculations
+    const monthlyComparison = useMemo(() => {
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const lastMonthStart = new Date(currentYear, currentMonth - 1, 1);
+        const lastMonthEnd = new Date(currentYear, currentMonth, 0);
+        const currentMonthStart = new Date(currentYear, currentMonth, 1);
+
+        const lastMonthTxns = transactions.filter(t => {
+            const date = new Date(t.date);
+            return date >= lastMonthStart && date <= lastMonthEnd;
+        });
+        const currentMonthTxns = transactions.filter(t => {
+            const date = new Date(t.date);
+            return date >= currentMonthStart;
+        });
+
+        const lastMonthIncome = lastMonthTxns.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+        const lastMonthExpenses = lastMonthTxns.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+        const currentMonthIncome = currentMonthTxns.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+        const currentMonthExpenses = currentMonthTxns.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+
+        const incomeChange = lastMonthIncome > 0 ? Math.round(((currentMonthIncome - lastMonthIncome) / lastMonthIncome) * 100) : 0;
+        const expenseChange = lastMonthExpenses > 0 ? Math.round(((currentMonthExpenses - lastMonthExpenses) / lastMonthExpenses) * 100) : 0;
+
+        return {
+            lastMonthIncome, lastMonthExpenses,
+            currentMonthIncome, currentMonthExpenses,
+            incomeChange, expenseChange
+        };
+    }, [transactions, now]);
+
+    // Top transactions (largest expenses)
+    const topTransactions = useMemo(() => {
+        return [...filteredTransactions]
+            .filter(t => t.type === 'expense')
+            .sort((a, b) => b.amount - a.amount)
+            .slice(0, 5);
+    }, [filteredTransactions]);
+
+    // Income breakdown by category
+    const incomeBreakdown = useMemo(() => {
+        const incomeByCategory: Record<string, number> = {};
+        filteredTransactions
+            .filter(t => t.type === 'income')
+            .forEach(t => {
+                const cat = t.category as string;
+                incomeByCategory[cat] = (incomeByCategory[cat] || 0) + t.amount;
+            });
+
+        return Object.entries(incomeByCategory)
+            .map(([name, value]) => ({
+                name,
+                value,
+                percentage: totalIncome > 0 ? Math.round((value / totalIncome) * 100) : 0
+            }))
+            .sort((a, b) => b.value - a.value);
+    }, [filteredTransactions, totalIncome]);
+
+    // Cash flow forecast
+    const cashFlowForecast = useMemo(() => {
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const dayOfMonth = now.getDate();
+        const daysRemaining = daysInMonth - dayOfMonth;
+
+        const projectedExpenses = avgDailySpending * daysRemaining;
+        const projectedMonthlyTotal = totalExpenses + projectedExpenses;
+        const projectedSavings = totalIncome - projectedMonthlyTotal;
+
+        return {
+            daysRemaining,
+            projectedExpenses: Math.round(projectedExpenses),
+            projectedMonthlyTotal: Math.round(projectedMonthlyTotal),
+            projectedSavings: Math.round(projectedSavings),
+            onTrack: projectedSavings >= 0
+        };
+    }, [now, avgDailySpending, totalExpenses, totalIncome]);
+
+    // Peak spending day
+    const peakSpendingDay = useMemo(() => {
+        const maxDay = dayOfWeekData.reduce((max, day) =>
+            day.amount > max.amount ? day : max, dayOfWeekData[0]);
+        return maxDay;
+    }, [dayOfWeekData]);
+
     return (
         <div className="space-y-8 animate-fade-in pb-10">
             {/* Header Section */}
@@ -415,69 +506,81 @@ export const Analytics: React.FC<Props> = ({ transactions, budgets, currency }) 
                     </div>
 
                     <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            {chartType === 'area' ? (
-                                <AreaChart data={trendData}>
-                                    <defs>
-                                        <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
-                                            <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.3} />
-                                            <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#94a3b8' }}
-                                    />
-                                    <YAxis
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#94a3b8' }}
-                                        tickFormatter={(value) => `${currency}${value}`}
-                                    />
-                                    <Tooltip content={<CustomAreaTooltip currency={currency} />} />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="income"
-                                        stroke="#22c55e"
-                                        strokeWidth={2}
-                                        fill="url(#incomeGradient)"
-                                        name="Income"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="expenses"
-                                        stroke="#f43f5e"
-                                        strokeWidth={2}
-                                        fill="url(#expenseGradient)"
-                                        name="Expenses"
-                                    />
-                                </AreaChart>
-                            ) : (
-                                <BarChart data={trendData}>
-                                    <XAxis
-                                        dataKey="name"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#94a3b8' }}
-                                    />
-                                    <YAxis
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#94a3b8' }}
-                                        tickFormatter={(value) => `${currency}${value}`}
-                                    />
-                                    <Tooltip content={<CustomAreaTooltip currency={currency} />} />
-                                    <Bar dataKey="income" fill="#22c55e" radius={[4, 4, 0, 0]} name="Income" />
-                                    <Bar dataKey="expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Expenses" />
-                                </BarChart>
-                            )}
-                        </ResponsiveContainer>
+                        {totalIncome === 0 && totalExpenses === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
+                                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-3">
+                                    <PlusCircle size={24} />
+                                </div>
+                                <h3 className="font-semibold text-slate-900 dark:text-white">No data available</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
+                                    Start adding transactions to visualize your cash flow trend here.
+                                </p>
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                {chartType === 'area' ? (
+                                    <AreaChart data={trendData}>
+                                        <defs>
+                                            <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
+                                                <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.3} />
+                                                <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 12, fill: '#94a3b8' }}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 12, fill: '#94a3b8' }}
+                                            tickFormatter={(value) => `${currency}${value}`}
+                                        />
+                                        <Tooltip content={<CustomAreaTooltip currency={currency} />} />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="income"
+                                            stroke="#22c55e"
+                                            strokeWidth={2}
+                                            fill="url(#incomeGradient)"
+                                            name="Income"
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="expenses"
+                                            stroke="#f43f5e"
+                                            strokeWidth={2}
+                                            fill="url(#expenseGradient)"
+                                            name="Expenses"
+                                        />
+                                    </AreaChart>
+                                ) : (
+                                    <BarChart data={trendData}>
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 12, fill: '#94a3b8' }}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 12, fill: '#94a3b8' }}
+                                            tickFormatter={(value) => `${currency}${value}`}
+                                        />
+                                        <Tooltip content={<CustomAreaTooltip currency={currency} />} />
+                                        <Bar dataKey="income" fill="#22c55e" radius={[4, 4, 0, 0]} name="Income" />
+                                        <Bar dataKey="expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Expenses" />
+                                    </BarChart>
+                                )}
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
@@ -543,11 +646,14 @@ export const Analytics: React.FC<Props> = ({ transactions, budgets, currency }) 
                             </div>
                         </>
                     ) : (
-                        <div className="h-48 flex items-center justify-center text-slate-400">
-                            <div className="text-center">
-                                <PieChartIcon size={32} className="mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">No expense data</p>
+                        <div className="h-48 flex flex-col items-center justify-center text-center p-4 bg-slate-50/50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
+                            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2">
+                                <PlusCircle size={20} />
                             </div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">Start Spending?</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[150px]">
+                                Add expenses to see a breakdown by category.
+                            </p>
                         </div>
                     )}
                 </div>
@@ -730,6 +836,265 @@ export const Analytics: React.FC<Props> = ({ transactions, budgets, currency }) 
                     </div>
                 </div>
             )}
+
+            {/* Enhanced Analytics Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Monthly Comparison Card */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Monthly Comparison</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">This month vs last month</p>
+                        </div>
+                        <Calendar size={18} className="text-slate-400" />
+                    </div>
+
+                    <div className="space-y-6">
+                        {/* Income Comparison */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Income</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${monthlyComparison.incomeChange >= 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                        {monthlyComparison.incomeChange >= 0 ? '+' : ''}{monthlyComparison.incomeChange}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                    <p className="text-xs text-slate-400 mb-1">Last Month</p>
+                                    <p className="text-lg font-bold text-slate-500">{currency}{monthlyComparison.lastMonthIncome.toLocaleString()}</p>
+                                </div>
+                                <ArrowRight size={16} className="text-slate-300" />
+                                <div className="flex-1 text-right">
+                                    <p className="text-xs text-slate-400 mb-1">This Month</p>
+                                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{currency}{monthlyComparison.currentMonthIncome.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Expenses Comparison */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Expenses</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${monthlyComparison.expenseChange <= 0 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                        {monthlyComparison.expenseChange >= 0 ? '+' : ''}{monthlyComparison.expenseChange}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                    <p className="text-xs text-slate-400 mb-1">Last Month</p>
+                                    <p className="text-lg font-bold text-slate-500">{currency}{monthlyComparison.lastMonthExpenses.toLocaleString()}</p>
+                                </div>
+                                <ArrowRight size={16} className="text-slate-300" />
+                                <div className="flex-1 text-right">
+                                    <p className="text-xs text-slate-400 mb-1">This Month</p>
+                                    <p className="text-lg font-bold text-rose-600 dark:text-rose-400">{currency}{monthlyComparison.currentMonthExpenses.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Cash Flow Forecast Card */}
+                <div className={`p-6 rounded-2xl shadow-sm border ${cashFlowForecast.onTrack ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border-emerald-100 dark:border-emerald-900/30' : 'bg-gradient-to-br from-rose-50 to-orange-50 dark:from-rose-950/20 dark:to-orange-950/20 border-rose-100 dark:border-rose-900/30'}`}>
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Cash Flow Forecast</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{cashFlowForecast.daysRemaining} days left this month</p>
+                        </div>
+                        {cashFlowForecast.onTrack ? (
+                            <CheckCircle2 size={24} className="text-emerald-500" />
+                        ) : (
+                            <AlertCircle size={24} className="text-rose-500" />
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="bg-white/60 dark:bg-slate-800/60 p-4 rounded-xl">
+                            <p className="text-xs font-medium text-slate-500 mb-1">Projected Expenses</p>
+                            <p className="text-xl font-bold text-slate-800 dark:text-white">{currency}{cashFlowForecast.projectedMonthlyTotal.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-white/60 dark:bg-slate-800/60 p-4 rounded-xl">
+                            <p className="text-xs font-medium text-slate-500 mb-1">Projected Savings</p>
+                            <p className={`text-xl font-bold ${cashFlowForecast.projectedSavings >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {currency}{Math.abs(cashFlowForecast.projectedSavings).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+
+                    <p className={`text-sm font-medium ${cashFlowForecast.onTrack ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}>
+                        {cashFlowForecast.onTrack
+                            ? `You're on track to save ${currency}${cashFlowForecast.projectedSavings.toLocaleString()} this month!`
+                            : `Warning: You may overspend by ${currency}${Math.abs(cashFlowForecast.projectedSavings).toLocaleString()} this month.`
+                        }
+                    </p>
+                </div>
+
+            </div>
+
+            {/* Top Transactions & Spending Patterns Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Top Transactions Card */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Top Expenses</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Biggest transactions this period</p>
+                        </div>
+                        <Receipt size={18} className="text-slate-400" />
+                    </div>
+
+                    <div className="space-y-3">
+                        {topTransactions.length === 0 ? (
+                            <p className="text-center text-slate-400 py-8">No transactions yet</p>
+                        ) : (
+                            topTransactions.map((t, idx) => (
+                                <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${idx === 0 ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                            {idx + 1}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white truncate max-w-[150px]">{t.description}</p>
+                                            <p className="text-xs text-slate-500">{t.category} • {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-bold text-rose-600 dark:text-rose-400">-{currency}{t.amount.toLocaleString()}</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Spending Patterns Card */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Spending Patterns</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Peak day: <span className="font-semibold text-indigo-600">{peakSpendingDay?.day}</span></p>
+                        </div>
+                        <Activity size={18} className="text-slate-400" />
+                    </div>
+
+                    <div className="space-y-3">
+                        {dayOfWeekData.map((day) => (
+                            <div key={day.day} className="flex items-center gap-3">
+                                <span className="w-10 text-xs font-medium text-slate-500">{day.day}</span>
+                                <div className="flex-1 h-6 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-500 ${day.day === peakSpendingDay?.day ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                        style={{ width: `${day.intensity}%` }}
+                                    />
+                                </div>
+                                <span className="w-20 text-xs font-bold text-slate-600 dark:text-slate-400 text-right">{currency}{day.amount.toLocaleString()}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Goals Progress & Income Breakdown Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Goals Progress Card */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Goals Progress</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Track your savings goals</p>
+                        </div>
+                        <Target size={18} className="text-slate-400" />
+                    </div>
+
+                    <div className="space-y-4">
+                        {goals.length === 0 ? (
+                            <p className="text-center text-slate-400 py-8">No active goals</p>
+                        ) : (
+                            goals.slice(0, 4).map((goal) => {
+                                const percentage = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+                                const isComplete = goal.currentAmount >= goal.targetAmount;
+                                const daysLeft = goal.deadline
+                                    ? Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - now.getTime()) / (1000 * 3600 * 24)))
+                                    : null;
+
+                                return (
+                                    <div key={goal.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                {isComplete ? (
+                                                    <CheckCircle2 size={16} className="text-emerald-500" />
+                                                ) : (
+                                                    <Target size={16} className="text-indigo-500" />
+                                                )}
+                                                <span className="text-sm font-bold text-slate-800 dark:text-white">{goal.name}</span>
+                                            </div>
+                                            <span className={`text-xs font-bold ${isComplete ? 'text-emerald-500' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                                                {percentage.toFixed(0)}%
+                                            </span>
+                                        </div>
+                                        <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-2">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-500 ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                                                style={{ width: `${percentage}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                            <span>{currency}{goal.currentAmount.toLocaleString()} / {currency}{goal.targetAmount.toLocaleString()}</span>
+                                            {daysLeft !== null && !isComplete && (
+                                                <span className={daysLeft <= 7 ? 'text-rose-500 font-semibold' : ''}>
+                                                    {daysLeft} days left
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+
+                {/* Income Sources Breakdown */}
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Income Sources</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Where your money comes from</p>
+                        </div>
+                        <Banknote size={18} className="text-slate-400" />
+                    </div>
+
+                    <div className="space-y-3">
+                        {incomeBreakdown.length === 0 ? (
+                            <p className="text-center text-slate-400 py-8">No income recorded</p>
+                        ) : (
+                            incomeBreakdown.slice(0, 5).map((source, idx) => (
+                                <div key={source.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                                    <div className="flex items-center gap-3">
+                                        <div
+                                            className="w-8 h-8 rounded-full flex items-center justify-center"
+                                            style={{ backgroundColor: CHART_COLORS[idx % CHART_COLORS.length] + '20', color: CHART_COLORS[idx % CHART_COLORS.length] }}
+                                        >
+                                            <DollarSign size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{source.name}</p>
+                                            <p className="text-xs text-slate-500">{source.percentage}% of income</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">+{currency}{source.value.toLocaleString()}</span>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };

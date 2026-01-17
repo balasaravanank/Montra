@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserProfile, View } from '../types';
 import { NAV_ITEMS } from '../constants';
-import { Globe, LogOut } from 'lucide-react';
+import { Globe, LogOut, User } from 'lucide-react';
 
 interface TopNavbarProps {
     currentView: View;
@@ -95,18 +95,23 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ currentView, onNavClick, o
 
                 {/* Profile */}
                 <div className="flex items-center gap-4 pl-6 border-l border-slate-200 dark:border-white/10">
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">{profile.name || 'Montra User'}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{email || 'No email'}</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden">
-                        {/* Simple Avatar Placeholder */}
-                        <img
-                            src={profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name || 'User'}`}
-                            alt="Avatar"
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
+                    <button
+                        onClick={() => onNavClick('settings')}
+                        className="flex items-center gap-4 hover:opacity-80 transition-opacity text-right"
+                    >
+                        <div className="hidden md:block">
+                            <p className="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">{profile.name || 'Montra User'}</p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{email || 'No email'}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden">
+                            {/* Simple Avatar Placeholder */}
+                            {profile.avatar ? (
+                                <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                <User size={26} className="text-indigo-600 dark:text-indigo-400" />
+                            )}
+                        </div>
+                    </button>
                     <button
                         onClick={onLogout}
                         className="md:hidden p-2 text-slate-400 hover:text-red-500 transition-colors"
