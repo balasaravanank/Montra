@@ -14,7 +14,44 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['logo.png'],
+        includeAssets: ['logo.png', 'icons/*'],
+        workbox: {
+          // Cache all navigation requests (pages)
+          navigateFallback: 'index.html',
+          // Cache JS, CSS, and other assets
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          // Runtime caching for API calls and fonts
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'gstatic-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ]
+        },
         manifest: {
           name: 'Montra - Expense Tracker',
           short_name: 'Montra',
