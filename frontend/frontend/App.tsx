@@ -9,8 +9,8 @@ import { TopNavbar } from './components/TopNavbar';
 import { Plus, Loader2 } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SyncManager } from './components/SyncManager';
 import { InstallPrompt } from './components/InstallPrompt';
-import { useOnlineStatus } from './hooks/useOnlineStatus';
 import {
   subscribeToTransactions,
   subscribeToSettings,
@@ -58,7 +58,6 @@ const DEFAULT_SETTINGS: UserSettings = {
 // Main App content component (uses auth context)
 const AppContent = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const isOnline = useOnlineStatus();
 
   const [currentView, setCurrentView] = useState<View>('login');
   const [isModalOpen, setModalOpen] = useState(false);
@@ -89,8 +88,29 @@ const AppContent = () => {
     setDataLoading(true);
 
     // Subscribe to real-time updates
-    const unsubTransactions = subscribeToTransactions(user.uid, (data) => {
-      setTransactions(data);
+    const unsubTransactions = subscribeToTransactions(user.uid, async (data) => {
+      // Merge with offline queue
+      try {
+        const { getQueue } = await import('./lib/db');
+        const offlineQueue = await getQueue();
+        const myOfflineTransactions = offlineQueue
+          .filter((item: any) => item.userId === user.uid)
+          .map((item: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { userId, ...t } = item;
+            return t as Transaction;
+          });
+
+        // Combine and sort
+        const allTransactions = [...myOfflineTransactions, ...data].sort((a, b) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setTransactions(allTransactions);
+      } catch (e) {
+        console.error('Error fetching offline queue:', e);
+        setTransactions(data);
+      }
     });
 
     const unsubSettings = subscribeToSettings(user.uid, (data) => {
@@ -405,13 +425,6 @@ const AppContent = () => {
         />
       )}
 
-      {/* Offline Indicator */}
-      {!isOnline && (
-        <div className="bg-amber-500 text-white text-xs font-bold text-center py-1 absolute top-0 w-full z-50">
-          You are offline. Changes will save locally and sync when online.
-        </div>
-      )}
-
       {/* Main Content Wrapper */}
       <main
         className={`
@@ -502,6 +515,7 @@ const App = () => {
     <AuthProvider>
       <ErrorBoundary>
         <AppContent />
+        <SyncManager />
         <InstallPrompt />
       </ErrorBoundary>
     </AuthProvider>
