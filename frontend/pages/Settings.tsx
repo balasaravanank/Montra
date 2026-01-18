@@ -298,6 +298,141 @@ export const Settings: React.FC<Props> = ({ settings, onUpdateSettings, onResetD
           </div>
         </MagicBentoCard>
 
+        {/* About Montra Card */}
+        <MagicBentoCard
+          colSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden"
+        >
+          <div className="flex flex-col items-center justify-center h-full py-4 relative z-10">
+            <img src="/logo.png" alt="Montra Logo" className="w-16 h-16 object-contain mb-3" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Montra</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Version 1.0.0</p>
+            <div className="text-center">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-2">Created by</p>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://www.linkedin.com/in/bala-saravanan-k/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 rounded-lg transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-blue-600 dark:text-blue-400">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                  </svg>
+                  <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">Bala</span>
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/sreesanth-sree/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 rounded-lg transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-blue-600 dark:text-blue-400">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                  </svg>
+                  <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">Sreesanth</span>
+                </a>
+              </div>
+            </div>
+          </div>
+          {/* Background watermark */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+            <img src="/logo.png" alt="" className="w-40 h-40 object-contain" />
+          </div>
+        </MagicBentoCard>
+
+        {/* Report Bug Card */}
+        <MagicBentoCard
+          colSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm group cursor-pointer"
+        >
+          <a
+            href="mailto:balaselvi544@gmail.com?subject=Bug Report - Montra App"
+            className="flex flex-col items-center justify-center h-full py-4"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-500/10 group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20 flex items-center justify-center mb-3 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Contact Support</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center px-4">Send us an email</p>
+          </a>
+        </MagicBentoCard>
+
+        {/* Quick Stats Card */}
+        <MagicBentoCard
+          title="Quick Stats"
+          colSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm"
+        >
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
+                    <path d="M12 20V10" />
+                    <path d="M18 20V4" />
+                    <path d="M6 20v-4" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">App Version</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white">v1.0.0</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Member Since</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white">
+                    {user?.metadata.creationTime
+                      ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                      : 'Jan 2026'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </MagicBentoCard>
+
+        {/* Connect Card - Coming Soon */}
+        <MagicBentoCard
+          title="Connect"
+          description="Coming soon"
+          colSpan={1}
+          enableStars={false}
+          clickEffect={true}
+          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden"
+        >
+          <div className="mt-4 flex flex-col items-center justify-center py-8">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 dark:text-slate-500">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Social Media</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center">Coming soon. Stay tuned!</p>
+          </div>
+          {/* Decorative blur */}
+          <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+        </MagicBentoCard>
+
       </MagicBentoGrid>
     </div >
   );
