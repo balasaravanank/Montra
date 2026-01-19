@@ -43,7 +43,6 @@ interface Props {
   onClose: () => void;
   onSave: (t: Omit<Transaction, 'id'>) => void;
   currency: string;
-  currency: string;
   initialType?: TransactionType;
   initialData?: Transaction | null;
 }
@@ -71,12 +70,10 @@ const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
   [Category.GIFT]: <Gift size={18} />,
 };
 
-// Wallet/Payment method options
+// Wallet/Payment method options - Cash or Bank (includes Card, UPI, Bank Transfer)
 const WALLET_OPTIONS = [
   { id: 'cash', label: 'Cash', icon: <Wallet size={18} /> },
-  { id: 'card', label: 'Card', icon: <CreditCard size={18} /> },
   { id: 'bank', label: 'Bank', icon: <Building2 size={18} /> },
-  { id: 'upi', label: 'UPI', icon: <Smartphone size={18} /> },
 ] as const;
 
 export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, currency, initialType = 'expense', initialData }) => {
@@ -107,7 +104,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
   const [source, setSource] = useState('');
   const [type, setType] = useState<TransactionType>(initialType);
   const [category, setCategory] = useState<Category | string>(Category.FOOD);
-  const [wallet, setWallet] = useState<'cash' | 'card' | 'bank' | 'upi'>('card');
+  const [wallet, setWallet] = useState<'cash' | 'bank'>('bank');
   const [tags, setTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -138,7 +135,13 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
         setType(initialData.type);
         setCategory(initialData.category);
         setSource(initialData.source || '');
-        setWallet(initialData.wallet || 'card');
+        // Map legacy wallet values to new simplified options
+        const legacyWallet = initialData.wallet;
+        if (legacyWallet === 'card' || legacyWallet === 'upi' || legacyWallet === 'bank') {
+          setWallet('bank');
+        } else {
+          setWallet(legacyWallet === 'cash' ? 'cash' : 'bank');
+        }
         setTags(initialData.tags || []);
 
       } else {
@@ -156,7 +159,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
           setDate(getTodayString());
           setTags([]);
           setCustomTag('');
-          setWallet('card');
+          setWallet('bank');
           setSource('');
           setDescription('');
           setAmount('');
@@ -232,7 +235,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
       setDate(getTodayString());
       setTags([]);
       setCustomTag('');
-      setWallet('card');
+      setWallet('bank');
       setIsSuccess(false);
       onClose();
     }, 2500);
@@ -269,9 +272,9 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
   const selectedWallet = WALLET_OPTIONS.find(w => w.id === wallet);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 lg:p-8">
       <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md md:max-w-lg">
+      <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
         <style>
           {`
             @keyframes confetti-burst {
@@ -329,9 +332,9 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
           `}
         </style>
 
-        <div className={`bg-white dark:bg-slate-900 rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden transition-all duration-500 animate-slide-up-modal max-h-[90vh] md:max-h-[85vh] overflow-y-auto hide-scrollbar ${isSuccess ? 'scale-[1.02]' : 'scale-100'}`}>
+        <div className={`bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 animate-slide-up-modal max-h-[90vh] sm:max-h-[85vh] md:max-h-[82vh] lg:max-h-[80vh] overflow-y-auto hide-scrollbar ${isSuccess ? 'scale-[1.02]' : 'scale-100'}`}>
           {isSuccess ? (
-            <div className="py-10 flex flex-col items-center justify-center animate-fade-in text-center relative">
+            <div className="py-10 sm:py-12 md:py-14 lg:py-16 flex flex-col items-center justify-center animate-fade-in text-center relative">
               {/* Toast Notification Banner at Top */}
               <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full px-6 z-30 pointer-events-none">
                 <div className="bg-slate-900 dark:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-xl flex items-center justify-center gap-2 animate-toast-in border border-slate-800 dark:border-indigo-500/50">
@@ -415,17 +418,18 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
           ) : (
             <div>
               {/* Header */}
-              <div className="flex justify-between items-center px-5 pt-4 pb-2">
+              <div className="flex justify-between items-center px-5 sm:px-6 md:px-8 pt-4 md:pt-5 pb-2 md:pb-3">
                 <button
                   onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <X size={20} />
+                  <X size={20} className="md:hidden" />
+                  <X size={24} className="hidden md:block" />
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!amount}
-                  className={`text-sm font-bold px-4 py-2 rounded-xl transition-all ${amount
+                  className={`text-sm md:text-base font-bold px-4 md:px-5 py-2 md:py-2.5 rounded-xl transition-all ${amount
                     ? 'text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
                     : 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
                     }`}
@@ -435,10 +439,10 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
               </div>
 
               {/* Amount Input */}
-              <div className="text-center py-4 px-5">
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-1">Amount</p>
-                <div className="flex items-center justify-center gap-1">
-                  <span className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white flex-shrink-0">{currency}</span>
+              <div className="text-center py-4 sm:py-5 md:py-6 lg:py-8 px-5 sm:px-6 md:px-8 lg:px-10">
+                <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500 font-medium mb-1 md:mb-2">Amount</p>
+                <div className="flex items-center justify-center gap-1 md:gap-2">
+                  <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white flex-shrink-0">{currency}</span>
                   <input
                     type="number"
                     step="0.01"
@@ -446,18 +450,18 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     autoFocus
-                    className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white bg-transparent border-none outline-none text-left min-w-[60px] max-w-[200px] placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white bg-transparent border-none outline-none text-left min-w-[60px] max-w-[200px] sm:max-w-[250px] md:max-w-[300px] placeholder:text-slate-300 dark:placeholder:text-slate-600"
                     style={{ width: `${Math.max(60, (amount?.toString().length || 3) * 24)}px` }}
                   />
                 </div>
               </div>
 
               {/* Type Toggle */}
-              <div className="px-5 pb-3">
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-full">
+              <div className="px-5 sm:px-6 md:px-8 lg:px-10 pb-3 sm:pb-4 md:pb-5">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 md:p-1.5 rounded-full">
                   <button
                     type="button"
-                    className={`flex-1 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${type === 'expense'
+                    className={`flex-1 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base md:text-lg font-bold rounded-full transition-all duration-300 ${type === 'expense'
                       ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                       : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                       }`}
@@ -467,7 +471,7 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                   </button>
                   <button
                     type="button"
-                    className={`flex-1 py-2.5 text-sm font-bold rounded-full transition-all duration-300 ${type === 'income'
+                    className={`flex-1 py-2.5 sm:py-3 md:py-3.5 text-sm sm:text-base md:text-lg font-bold rounded-full transition-all duration-300 ${type === 'income'
                       ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                       : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                       }`}
@@ -479,34 +483,36 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
               </div>
 
               {/* Form Fields */}
-              <div className="px-5 space-y-0.5 border-t border-slate-100 dark:border-slate-800">
+              <div className="px-5 sm:px-6 md:px-8 lg:px-10 space-y-0.5 border-t border-slate-100 dark:border-slate-800">
                 {/* Date */}
                 <div
-                  className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-5 px-5 transition-colors"
+                  className="flex items-center justify-between py-4 sm:py-5 md:py-6 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-5 sm:-mx-6 md:-mx-8 lg:-mx-10 px-5 sm:px-6 md:px-8 lg:px-10 transition-colors"
                   onClick={() => setShowCalendar(!showCalendar)}
                 >
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Date</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">{formatDisplayDate(date)}</span>
-                    <CalendarIcon size={16} className="text-slate-400" />
+                  <span className="text-sm sm:text-base md:text-lg font-semibold text-slate-700 dark:text-slate-300">Date</span>
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className="text-sm sm:text-base md:text-lg text-indigo-600 dark:text-indigo-400 font-medium">{formatDisplayDate(date)}</span>
+                    <CalendarIcon size={16} className="text-slate-400 md:hidden" />
+                    <CalendarIcon size={20} className="text-slate-400 hidden md:block" />
                   </div>
                 </div>
 
                 {/* Wallet */}
                 <div
-                  className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-5 px-5 transition-colors"
+                  className="flex items-center justify-between py-4 sm:py-5 md:py-6 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-5 sm:-mx-6 md:-mx-8 lg:-mx-10 px-5 sm:px-6 md:px-8 lg:px-10 transition-colors"
                   onClick={() => setShowWalletPicker(!showWalletPicker)}
                 >
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Wallet</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{selectedWallet?.label}</span>
-                    <ChevronRight size={16} className="text-slate-400" />
+                  <span className="text-sm sm:text-base md:text-lg font-semibold text-slate-700 dark:text-slate-300">Wallet</span>
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400">{selectedWallet?.label}</span>
+                    <ChevronRight size={16} className="text-slate-400 md:hidden" />
+                    <ChevronRight size={20} className="text-slate-400 hidden md:block" />
                   </div>
                 </div>
 
                 {/* Wallet Picker */}
                 {showWalletPicker && (
-                  <div className="grid grid-cols-4 gap-2 py-3 animate-fade-in">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 py-3 sm:py-4 md:py-5 animate-fade-in">
                     {WALLET_OPTIONS.map((w) => (
                       <button
                         key={w.id}
@@ -515,13 +521,13 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                           setWallet(w.id);
                           setShowWalletPicker(false);
                         }}
-                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${wallet === w.id
+                        className={`flex flex-col items-center gap-1.5 sm:gap-2 md:gap-2.5 p-3 sm:p-4 md:p-5 rounded-xl md:rounded-2xl transition-all ${wallet === w.id
                           ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-200 dark:border-indigo-500/30'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                       >
                         {w.icon}
-                        <span className="text-xs font-medium">{w.label}</span>
+                        <span className="text-xs sm:text-sm md:text-base font-medium">{w.label}</span>
                       </button>
                     ))}
                   </div>
@@ -529,20 +535,21 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
                 {/* Category */}
                 <div
-                  className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-5 px-5 transition-colors"
+                  className="flex items-center justify-between py-4 sm:py-5 md:py-6 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 -mx-5 sm:-mx-6 md:-mx-8 lg:-mx-10 px-5 sm:px-6 md:px-8 lg:px-10 transition-colors"
                   onClick={() => setShowCategoryPicker(!showCategoryPicker)}
                 >
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Category</span>
-                  <div className="flex items-center gap-2">
+                  <span className="text-sm sm:text-base md:text-lg font-semibold text-slate-700 dark:text-slate-300">Category</span>
+                  <div className="flex items-center gap-2 md:gap-3">
                     <span className="text-amber-500">{CATEGORY_ICON_MAP[category] || <MoreHorizontal size={18} />}</span>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">{category}</span>
-                    <ChevronRight size={16} className="text-slate-400" />
+                    <span className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400">{category}</span>
+                    <ChevronRight size={16} className="text-slate-400 md:hidden" />
+                    <ChevronRight size={20} className="text-slate-400 hidden md:block" />
                   </div>
                 </div>
 
                 {/* Category Picker */}
                 {showCategoryPicker && (
-                  <div className="grid grid-cols-4 gap-2 py-3 animate-fade-in max-h-48 overflow-y-auto custom-scrollbar">
+                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 py-3 sm:py-4 md:py-5 animate-fade-in max-h-48 sm:max-h-56 md:max-h-64 overflow-y-auto custom-scrollbar">
                     {currentCategories.map((cat) => (
                       <button
                         key={cat}
@@ -551,13 +558,13 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                           setCategory(cat);
                           setShowCategoryPicker(false);
                         }}
-                        className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all ${category === cat
+                        className={`flex flex-col items-center gap-1.5 md:gap-2 p-2.5 sm:p-3 md:p-4 rounded-xl md:rounded-2xl transition-all ${category === cat
                           ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-200 dark:border-indigo-500/30'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                       >
                         {CATEGORY_ICON_MAP[cat] || <MoreHorizontal size={18} />}
-                        <span className="text-[10px] font-medium truncate w-full text-center">{cat}</span>
+                        <span className="text-[10px] sm:text-xs md:text-sm font-medium truncate w-full text-center">{cat}</span>
                       </button>
                     ))}
                   </div>
@@ -565,21 +572,21 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
                 {/* Source (Income only) */}
                 {type === 'income' && (
-                  <div className="py-4 border-b border-slate-100 dark:border-slate-800 -mx-5 px-5">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-2">Source</span>
+                  <div className="py-4 sm:py-5 md:py-6 border-b border-slate-100 dark:border-slate-800 -mx-5 sm:-mx-6 md:-mx-8 lg:-mx-10 px-5 sm:px-6 md:px-8 lg:px-10">
+                    <span className="text-sm sm:text-base md:text-lg font-semibold text-slate-700 dark:text-slate-300 block mb-2 md:mb-3">Source</span>
                     <input
                       type="text"
                       placeholder="e.g. Salary, Freelance..."
                       value={source}
                       onChange={(e) => setSource(e.target.value)}
-                      className="w-full text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-3 border-none outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-400"
+                      className="w-full text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl md:rounded-2xl px-4 md:px-5 py-3 sm:py-3.5 md:py-4 border-none outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-400"
                     />
                   </div>
                 )}
 
                 {/* Tags */}
-                <div className="py-4 border-b border-slate-100 dark:border-slate-800 -mx-5 px-5">
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-3">Tags</span>
+                <div className="py-4 sm:py-5 md:py-6 border-b border-slate-100 dark:border-slate-800 -mx-5 sm:-mx-6 md:-mx-8 lg:-mx-10 px-5 sm:px-6 md:px-8 lg:px-10">
+                  <span className="text-sm sm:text-base md:text-lg font-semibold text-slate-700 dark:text-slate-300 block mb-3 md:mb-4">Tags</span>
 
                   {/* Custom Tag Input */}
                   <div className="flex gap-2 mb-3">
@@ -589,18 +596,18 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                       value={customTag}
                       onChange={(e) => setCustomTag(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomTag())}
-                      className="flex-1 text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-2.5 border-none outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-400"
+                      className="flex-1 text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 sm:py-3 md:py-3.5 border-none outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-400"
                     />
                   </div>
 
                   {/* Preset Tags */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 sm:gap-2.5 md:gap-3">
                     {PRESET_TAGS.map((tag) => (
                       <button
                         key={tag}
                         type="button"
                         onClick={() => toggleTag(tag)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${tags.includes(tag)
+                        className={`flex items-center gap-1 md:gap-1.5 px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-medium transition-all ${tags.includes(tag)
                           ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
@@ -613,13 +620,13 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
 
                   {/* Selected Custom Tags */}
                   {tags.filter(t => !PRESET_TAGS.includes(t)).length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="flex flex-wrap gap-2 sm:gap-2.5 md:gap-3 mt-2 md:mt-3">
                       {tags.filter(t => !PRESET_TAGS.includes(t)).map((tag) => (
                         <button
                           key={tag}
                           type="button"
                           onClick={() => toggleTag(tag)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30"
+                          className="flex items-center gap-1 md:gap-1.5 px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-full text-xs sm:text-sm md:text-base font-medium bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30"
                         >
                           <Plus size={12} className="rotate-45" />
                           {tag}
@@ -630,24 +637,24 @@ export const TransactionModal: React.FC<Props> = ({ isOpen, onClose, onSave, cur
                 </div>
 
                 {/* Description */}
-                <div className="py-4 -mx-5 px-5">
+                <div className="py-4 sm:py-5 md:py-6 -mx-5 sm:-mx-6 md:-mx-8 lg:-mx-10 px-5 sm:px-6 md:px-8 lg:px-10">
                   <textarea
                     placeholder="Add details..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={2}
-                    className="w-full text-sm text-slate-600 dark:text-slate-300 bg-transparent border-none outline-none resize-none placeholder:text-slate-400"
+                    className="w-full text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 bg-transparent border-none outline-none resize-none placeholder:text-slate-400"
                   />
                 </div>
               </div>
 
               {/* Submit Button (Mobile) */}
-              <div className="p-4 pt-2 pb-6 md:pb-4">
+              <div className="p-4 sm:p-5 md:p-6 lg:p-8 pt-2 pb-6 sm:pb-5 md:pb-6">
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={!amount}
-                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${amount
+                  className={`w-full py-3 sm:py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm sm:text-base md:text-lg font-bold transition-all ${amount
                     ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                     }`}
