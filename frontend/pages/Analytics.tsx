@@ -518,7 +518,7 @@ export const Analytics: React.FC<Props> = ({ transactions, budgets, goals, curre
                         </div>
                     </div>
 
-                    <div className="h-64">
+                    <div className="h-64 w-full">
                         {totalIncome === 0 && totalExpenses === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10">
                                 <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-3">

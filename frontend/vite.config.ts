@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
+        devOptions: {
+          enabled: true
+        },
         includeAssets: ['logo.png', 'icons/*'],
         workbox: {
           // Cache all navigation requests (pages)
