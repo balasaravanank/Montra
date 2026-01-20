@@ -141,6 +141,11 @@ export const GoalModal: React.FC<Props> = ({ isOpen, onClose, onSave, onUpdate, 
                                         placeholder="0"
                                         value={target}
                                         onChange={(e) => setTarget(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && name && target) {
+                                                handleSave();
+                                            }
+                                        }}
                                         autoFocus
                                         className="text-4xl font-black text-slate-900 dark:text-white bg-transparent border-none outline-none text-left w-40 placeholder:text-slate-200 dark:placeholder:text-slate-700"
                                     />
@@ -156,6 +161,11 @@ export const GoalModal: React.FC<Props> = ({ isOpen, onClose, onSave, onUpdate, 
                                         placeholder="e.g. New MacBook"
                                         value={name}
                                         onChange={handleNameChange}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && name && target) {
+                                                handleSave();
+                                            }
+                                        }}
                                         className="w-full bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-3 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:font-normal"
                                     />
                                 </div>

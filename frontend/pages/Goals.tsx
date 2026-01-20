@@ -233,6 +233,11 @@ export const Goals: React.FC<Props> = ({ goals, onAddGoal, onUpdateGoal, onEditG
                           className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]/50 transition-all text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
                           value={contribution[goal.id] || ''}
                           onChange={(e) => setContribution({ ...contribution, [goal.id]: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleContribute(goal.id);
+                            }
+                          }}
                         />
                       </div>
                       <button

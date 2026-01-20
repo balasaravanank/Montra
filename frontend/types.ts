@@ -71,6 +71,8 @@ export interface UserSettings {
   profile: UserProfile;
   investmentAmount: number;
   investments: Investment[];
+  customTags?: string[];
+  hiddenTags?: string[];
 }
 
 // Investment Types
@@ -105,4 +107,4 @@ export interface AppState {
   settings: UserSettings;
 }
 
-export type View = 'dashboard' | 'transactions' | 'budgets' | 'goals' | 'analytics' | 'settings' | 'login' | 'signup';
+export type View = 'dashboard' | 'transactions' | 'budgets' | 'goals' | 'analytics' | 'investments' | 'settings' | 'login' | 'signup';

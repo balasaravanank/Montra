@@ -98,6 +98,11 @@ export const BudgetModal: React.FC<Props> = ({ isOpen, onClose, onSave, currency
                                 placeholder="0"
                                 value={limit}
                                 onChange={(e) => setLimit(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && limit && parseFloat(limit) > 0) {
+                                        handleSave();
+                                    }
+                                }}
                                 autoFocus
                                 className="text-4xl font-black text-slate-900 dark:text-white bg-transparent border-none outline-none text-left w-40 placeholder:text-slate-200 dark:placeholder:text-slate-700"
                             />

@@ -482,6 +482,11 @@ export const Investments: React.FC<Props> = ({
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && formData.name && formData.purchasePrice) {
+                                            handleSave();
+                                        }
+                                    }}
                                     placeholder="e.g., Apple Inc, HDFC Bank"
                                     className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
@@ -494,6 +499,11 @@ export const Investments: React.FC<Props> = ({
                                     type="text"
                                     value={formData.symbol}
                                     onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && formData.name && formData.purchasePrice) {
+                                            handleSave();
+                                        }
+                                    }}
                                     placeholder="e.g., AAPL, HDFCBANK"
                                     className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-mono font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
@@ -507,6 +517,11 @@ export const Investments: React.FC<Props> = ({
                                         type="number"
                                         value={formData.quantity}
                                         onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && formData.name && formData.purchasePrice) {
+                                                handleSave();
+                                            }
+                                        }}
                                         placeholder="1"
                                         className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
@@ -517,6 +532,11 @@ export const Investments: React.FC<Props> = ({
                                         type="number"
                                         value={formData.purchasePrice}
                                         onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && formData.name && formData.purchasePrice) {
+                                                handleSave();
+                                            }
+                                        }}
                                         placeholder="0"
                                         className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
@@ -530,6 +550,11 @@ export const Investments: React.FC<Props> = ({
                                     type="number"
                                     value={formData.currentValue}
                                     onChange={(e) => setFormData({ ...formData, currentValue: e.target.value })}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && formData.name && formData.purchasePrice) {
+                                            handleSave();
+                                        }
+                                    }}
                                     placeholder="Same as purchase price"
                                     className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold outline-none focus:ring-2 focus:ring-indigo-500"
                                 />

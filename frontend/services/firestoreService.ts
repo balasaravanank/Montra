@@ -114,12 +114,43 @@ export const updateUserProfile = async (
 
 // ========== USER SETTINGS ==========
 
+// Helper function to recursively remove undefined values from objects
+// Firestore does not accept undefined values
+const removeUndefinedValues = (obj: any): any => {
+    if (obj === null || obj === undefined) {
+        return null;
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(item => removeUndefinedValues(item));
+    }
+    if (typeof obj === 'object') {
+        const cleaned: any = {};
+        for (const key of Object.keys(obj)) {
+            const value = obj[key];
+            if (value !== undefined) {
+                cleaned[key] = removeUndefinedValues(value);
+            }
+        }
+        return cleaned;
+    }
+    return obj;
+};
+
 export const saveUserSettings = async (userId: string, settings: UserSettings): Promise<void> => {
-    const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, {
-        settings,
-        updatedAt: serverTimestamp()
-    }, { merge: true });
+    try {
+        const userRef = doc(db, 'users', userId);
+        // Clean undefined values - Firestore doesn't accept undefined
+        const cleanSettings = removeUndefinedValues(settings);
+        console.log('💾 Saving user settings:', { userId, investments: cleanSettings.investments?.length || 0 });
+        await setDoc(userRef, {
+            settings: cleanSettings,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+        console.log('✅ User settings saved successfully');
+    } catch (error) {
+        console.error('❌ Error saving user settings:', error);
+        throw error;
+    }
 };
 
 export const getUserSettings = async (userId: string): Promise<UserSettings | null> => {
@@ -133,12 +164,26 @@ export const getUserSettings = async (userId: string): Promise<UserSettings | nu
 
 export const subscribeToSettings = (userId: string, callback: (settings: UserSettings | null) => void): Unsubscribe => {
     const userRef = doc(db, 'users', userId);
-    return onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-            callback(doc.data().settings || null);
+    return onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const settings = data.settings || null;
+            console.log('📥 Settings received from Firestore:', {
+                hasSettingsField: 'settings' in data,
+                settingsIsNull: settings === null,
+                investments: settings?.investments?.length || 0,
+                investmentData: settings?.investments,
+                fromCache: docSnap.metadata.fromCache,
+                hasPendingWrites: docSnap.metadata.hasPendingWrites
+            });
+            callback(settings);
         } else {
+            console.log('📥 No user document found in Firestore');
             callback(null);
         }
+    }, (error) => {
+        console.error('❌ Error subscribing to settings:', error);
+        callback(null);
     });
 };
 

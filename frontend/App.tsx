@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { View, Transaction, TransactionType, Category, Budget, SavingsGoal, UserSettings } from './types';
-import { NAV_ITEMS } from './constants';
+import { NAV_ITEMS, PRESET_TAGS } from './constants';
 
 import { TransactionModal } from './components/TransactionModal';
 import { TopNavbar } from './components/TopNavbar';
@@ -26,6 +26,7 @@ import {
   saveUserSettings,
   deleteAllUserData
 } from './services/firestoreService';
+import { ConfirmationProvider, useConfirmation } from './contexts/ConfirmationContext';
 
 // Lazy load pages
 const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -58,6 +59,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 // Main App content component (uses auth context)
 const AppContent = () => {
   const { user, loading: authLoading, signOut } = useAuth();
+  const { confirm } = useConfirmation();
 
   const [currentView, setCurrentView] = useState<View>('login');
   const [isModalOpen, setModalOpen] = useState(false);
@@ -93,10 +95,16 @@ const AppContent = () => {
     });
 
     const unsubSettings = subscribeToSettings(user.uid, (data) => {
+      console.log('🔄 App received settings from Firestore:', {
+        hasData: !!data,
+        investmentsCount: data?.investments?.length || 0,
+        investments: data?.investments
+      });
       if (data) {
         setSettings(data);
       } else {
         // Save default settings with user name
+        console.log('⚠️ No settings found, creating defaults');
         const newSettings = {
           ...DEFAULT_SETTINGS,
           profile: { ...DEFAULT_SETTINGS.profile, name: user.displayName || '' }
@@ -152,6 +160,20 @@ const AppContent = () => {
 
     await saveTransaction(user.uid, transactionToSave);
 
+    // Check for new tags and save them
+    if (transactionToSave.tags && transactionToSave.tags.length > 0) {
+      const currentCustomTags = settings.customTags || [];
+      const allKnownTags = new Set([...PRESET_TAGS, ...currentCustomTags]);
+
+      const newTags = transactionToSave.tags.filter(tag => !allKnownTags.has(tag));
+
+      if (newTags.length > 0) {
+        const updatedCustomTags = [...currentCustomTags, ...newTags];
+        const newSettings = { ...settings, customTags: updatedCustomTags };
+        await handleUpdateSettings(newSettings);
+      }
+    }
+
     // Close modal and reset editing state
     setModalOpen(false);
     setEditingTransaction(null);
@@ -165,11 +187,17 @@ const AppContent = () => {
 
   const handleDeleteTransaction = async (id: string) => {
     if (!user) return;
-    try {
-      await deleteTransactionFromDb(user.uid, id);
-    } catch (error) {
-      console.error('Failed to delete transaction:', error);
-      alert('Failed to delete transaction. Please try again.');
+    if (await confirm({
+      title: 'Delete Transaction?',
+      message: 'Are you sure you want to delete this transaction?',
+      variant: 'danger'
+    })) {
+      try {
+        await deleteTransactionFromDb(user.uid, id);
+      } catch (error) {
+        console.error('Failed to delete transaction:', error);
+        alert('Failed to delete transaction. Please try again.');
+      }
     }
   };
 
@@ -178,13 +206,19 @@ const AppContent = () => {
     await saveBudgetToDb(user.uid, budget);
   };
 
-  const handleDeleteBudget = async (category: Category) => {
+  const handleDeleteBudget = async (id: string) => {
     if (!user) return;
-    try {
-      await deleteBudgetFromDb(user.uid, category.toString());
-    } catch (error) {
-      console.error('Failed to delete budget:', error);
-      alert('Failed to delete budget. Please try again.');
+    if (await confirm({
+      title: 'Delete Budget?',
+      message: 'Are you sure you want to delete this budget?',
+      variant: 'danger'
+    })) {
+      try {
+        await deleteBudgetFromDb(user.uid, id);
+      } catch (error) {
+        console.error('Failed to delete budget:', error);
+        alert('Failed to delete budget. Please try again.');
+      }
     }
   };
 
@@ -204,11 +238,17 @@ const AppContent = () => {
 
   const handleDeleteGoal = async (id: string) => {
     if (!user) return;
-    try {
-      await deleteGoalFromDb(user.uid, id);
-    } catch (error) {
-      console.error('Failed to delete goal:', error);
-      alert('Failed to delete goal. Please try again.');
+    if (await confirm({
+      title: 'Delete Goal?',
+      message: 'Are you sure you want to delete this savings goal?',
+      variant: 'danger'
+    })) {
+      try {
+        await deleteGoalFromDb(user.uid, id);
+      } catch (error) {
+        console.error('Failed to delete goal:', error);
+        alert('Failed to delete goal. Please try again.');
+      }
     }
   };
 
@@ -223,9 +263,36 @@ const AppContent = () => {
     await saveUserSettings(user.uid, newSettings);
   };
 
+  const handleDeleteTag = async (tagToDelete: string) => {
+    if (!user) return;
+
+    const isPreset = PRESET_TAGS.includes(tagToDelete);
+    const newSettings = { ...settings };
+
+    if (isPreset) {
+      // Add to hidden tags
+      const currentHiddenTags = settings.hiddenTags || [];
+      if (!currentHiddenTags.includes(tagToDelete)) {
+        newSettings.hiddenTags = [...currentHiddenTags, tagToDelete];
+      }
+    } else {
+      // Remove from custom tags
+      const currentCustomTags = settings.customTags || [];
+      newSettings.customTags = currentCustomTags.filter(tag => tag !== tagToDelete);
+    }
+
+    await handleUpdateSettings(newSettings);
+  };
+
   const resetData = async () => {
     if (!user) return;
-    if (confirm('Are you sure you want to delete ALL your data? This cannot be undone!')) {
+
+    if (await confirm({
+      title: 'Reset All Data?',
+      message: 'Are you sure you want to delete ALL your data? This cannot be undone!',
+      variant: 'danger',
+      confirmText: 'Yes, Delete Everything'
+    })) {
       await deleteAllUserData(user.uid);
       // Reset local state
       setTransactions([]);
@@ -346,10 +413,16 @@ const AppContent = () => {
               const newSettings = { ...settings, investments: newInvestments };
               handleUpdateSettings(newSettings);
             }}
-            onDeleteInvestment={(id) => {
-              const newInvestments = (settings.investments || []).filter(inv => inv.id !== id);
-              const newSettings = { ...settings, investments: newInvestments };
-              handleUpdateSettings(newSettings);
+            onDeleteInvestment={async (id) => {
+              if (await confirm({
+                title: 'Delete Investment?',
+                message: 'Are you sure you want to remove this investment from your portfolio?',
+                variant: 'danger'
+              })) {
+                const newInvestments = (settings.investments || []).filter(inv => inv.id !== id);
+                const newSettings = { ...settings, investments: newInvestments };
+                handleUpdateSettings(newSettings);
+              }
             }}
           />
         );
@@ -483,6 +556,8 @@ const AppContent = () => {
         currency={settings.currency}
         initialType={modalType}
         initialData={editingTransaction}
+        availableTags={[...PRESET_TAGS, ...(settings.customTags || [])].filter(t => !(settings.hiddenTags || []).includes(t))}
+        onDeleteTag={handleDeleteTag}
       />
 
       {/* Network Status - Global (Hidden on Desktop Login as it's shown in the card) */}
@@ -496,16 +571,14 @@ const AppContent = () => {
   );
 };
 
-// Root App component with AuthProvider
-const App = () => {
+export default function App() {
   return (
-    <AuthProvider>
-      <ErrorBoundary>
-        <AppContent />
-        <InstallPrompt />
-      </ErrorBoundary>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ConfirmationProvider>
+          <AppContent />
+        </ConfirmationProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
-};
-
-export default App;
+}

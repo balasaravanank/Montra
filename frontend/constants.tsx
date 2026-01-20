@@ -43,6 +43,8 @@ import {
 import React from 'react';
 import { Category } from './types';
 
+export const PRESET_TAGS = ['Lunch', 'Family', 'Work', 'Monthly', 'Shopping', 'Weekend', 'Personal', 'Bills'];
+
 export const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
   [Category.FOOD]: <Coffee className="w-5 h-5" />,
   [Category.TRAVEL]: <Bus className="w-5 h-5" />,
